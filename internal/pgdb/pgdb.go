@@ -18,6 +18,10 @@ type PostgresDbParams struct {
 	Timezone string
 }
 
+type ReactRolesDatabase struct {
+	DB *gorm.DB
+}
+
 func getConnectionString(params PostgresDbParams) string {
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s timezone=%s",
 		params.Host, params.Port, params.User, params.Password, params.Db, params.Ssl, params.Timezone)
@@ -28,7 +32,7 @@ func runAutoMigrations(db *gorm.DB) {
 	db.AutoMigrate(&Role{})
 }
 
-func GetDatabase(params PostgresDbParams) *gorm.DB {
+func GetDatabase(params PostgresDbParams) *ReactRolesDatabase {
 	database, err := gorm.Open(postgres.Open(getConnectionString(params)), &gorm.Config{})
 
 	if err != nil {
@@ -39,5 +43,7 @@ func GetDatabase(params PostgresDbParams) *gorm.DB {
 
 	runAutoMigrations(database)
 
-	return database
+	return &ReactRolesDatabase{
+		DB: database,
+	}
 }
