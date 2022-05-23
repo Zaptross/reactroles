@@ -21,4 +21,7 @@
 go.work
 
 # Environments
-.*env
+.env*
+
+# Vscode files
+.vscode/launch.json
