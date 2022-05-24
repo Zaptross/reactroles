@@ -1,7 +1,7 @@
 package dgclient
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,7 +14,7 @@ type DiscordGoClientParams struct {
 	Token       string
 	RoleMessage string
 	RoleChannel string
-	db          *pgdb.ReactRolesDatabase
+	DB          *pgdb.ReactRolesDatabase `ignored:"true"`
 }
 
 type DiscordGoClient struct {
@@ -25,42 +25,42 @@ type DiscordGoClient struct {
 
 func GetClient(params DiscordGoClientParams) *DiscordGoClient {
 	if params.RoleChannel == "" {
-		panic("Role channel not set in client params")
+		log.Fatal("Role channel not set in client params")
 	}
 
 	dg, err := discordgo.New("Bot " + params.Token)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessageReactions | discordgo.IntentsGuildMessages)
 
 	client := &DiscordGoClient{
 		Session: dg,
-		db:      params.db,
+		db:      params.DB,
 	}
 
 	if params.RoleChannel != "" && params.RoleMessage == "" {
 		message, err := dg.ChannelMessageSend(params.RoleChannel, "Setting up role assignment message...")
 
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		client.roleMessage = message
 
-		fmt.Printf("\nRole message created: %s\n\n", message.ID)
+		log.Printf("[dgclient] Role message created: %s\n", message.ID)
 	}
 
 	if params.RoleMessage != "" {
 		message, err := dg.ChannelMessage(params.RoleChannel, params.RoleMessage)
 
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		client.roleMessage = message
-		println("Role message found...")
+		log.Println("[dgclient] Role message found...")
 	}
 
 	return client
@@ -69,10 +69,13 @@ func GetClient(params DiscordGoClientParams) *DiscordGoClient {
 func (d *DiscordGoClient) Connect() {
 	err := d.Session.Open()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	println("Connected to Discord, waiting for events...")
+	log.Println("[dgclient] Connected to Discord, updating role message...")
+	d.updateRoleSelectorMessage()
+
+	log.Println("[dgclient] Waiting for events...")
 
 	// Wait here until CTRL-C or other term signal is received.
 	sc := make(chan os.Signal, 1)
