@@ -41,6 +41,24 @@ func (client *DiscordGoClient) GetOnMessageHandler() func(*discordgo.Session, *d
 	}
 }
 
+func validateUserHasRole(s *discordgo.Session, guildID string, authorID string, role string) bool {
+
+	member, gmErr := s.GuildMember(guildID, authorID)
+
+	if gmErr != nil {
+		log.Println(gmErr.Error())
+		return false
+	}
+
+	for _, r := range member.Roles {
+		if r == role {
+			return true
+		}
+	}
+
+	return false
+}
+
 func splitRoleCommand(command string) (string, string, string, int) {
 	split := strings.Split(command, " ")[1:]
 
@@ -92,7 +110,7 @@ func roleCommandHandler(params RoleCommandParams) {
 			handleRemoveAction(params)
 		}
 	} else {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, fmt.Sprintf("Error: %s\nUsage: !role <add/remove> <role name> <emoji> [colour hex]\nNote: [] is optional\n\nExamples:\n!role add valorant :gun: #d34454\n!role add valorant :gun:\n!role remove valorant", validateErr), params.Message.Reference())
+		params.Session.ChannelMessageSendReply(params.Message.ChannelID, fmt.Sprintf("⚠ Error: %s\nUsage: !role <add/remove> <role name> <emoji> [colour hex]\nNote: [] is optional\n\nExamples:\n!role add valorant :gun: #d34454\n!role add valorant :gun:\n!role remove valorant", validateErr), params.Message.Reference())
 	}
 }
 
@@ -106,6 +124,10 @@ func validateRoleCommand(params RoleCommandParams) error {
 	}
 
 	if params.Action == "add" {
+		if !validateUserHasRole(params.Session, params.Message.GuildID, params.Message.Author.ID, params.Client.roleAddRoleID) {
+			return errors.New("you do not have permission to add roles")
+		}
+
 		if params.EmojiName == "" {
 			return errors.New("no emoji specified")
 		}
@@ -120,6 +142,10 @@ func validateRoleCommand(params RoleCommandParams) error {
 	}
 
 	if params.Action == "remove" {
+		if !validateUserHasRole(params.Session, params.Message.GuildID, params.Message.Author.ID, params.Client.roleRemoveRoleID) {
+			return errors.New("you do not have permission to remove roles")
+		}
+
 		if !params.Client.db.RoleIsNameTaken(params.RoleName) {
 			return errors.New("role name does not exist")
 		}
