@@ -11,16 +11,20 @@ import (
 )
 
 type DiscordGoClientParams struct {
-	Token       string
-	RoleMessage string
-	RoleChannel string
-	DB          *pgdb.ReactRolesDatabase `ignored:"true"`
+	Token            string
+	RoleMessage      string
+	RoleChannel      string
+	RoleAddRoleID    string
+	RoleRemoveRoleID string
+	DB               *pgdb.ReactRolesDatabase `ignored:"true"`
 }
 
 type DiscordGoClient struct {
-	Session     *discordgo.Session
-	roleMessage *discordgo.Message
-	db          *pgdb.ReactRolesDatabase
+	Session          *discordgo.Session
+	roleMessage      *discordgo.Message
+	roleAddRoleID    string
+	roleRemoveRoleID string
+	db               *pgdb.ReactRolesDatabase
 }
 
 func GetClient(params DiscordGoClientParams) *DiscordGoClient {
@@ -36,8 +40,10 @@ func GetClient(params DiscordGoClientParams) *DiscordGoClient {
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessageReactions | discordgo.IntentsGuildMessages)
 
 	client := &DiscordGoClient{
-		Session: dg,
-		db:      params.DB,
+		Session:          dg,
+		roleAddRoleID:    params.RoleAddRoleID,
+		roleRemoveRoleID: params.RoleRemoveRoleID,
+		db:               params.DB,
 	}
 
 	if params.RoleChannel != "" && params.RoleMessage == "" {
