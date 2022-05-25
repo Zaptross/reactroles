@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: reactroles-cfg
+    namespace: reactroles
+data:
+    DISCORD_ROLECHANNEL: 'roleChannelIdHere'
+    DISCORD_ROLEMESSAGE: 'roleMessageIdHere' # Will be logged out on first run when created,
+    DISCORD_ROLEADDROLEID: 'roleIdHere' # Users with this role can add roles
+    DISCORD_ROLEREMOVEROLEID: 'roleIdHere' # Users with this role can remove roles
+    DISCORD_TOKEN: yourBotTokenHere
+    POSTGRES_DB: reactroles
+    POSTGRES_HOST: your.postgres.host
+    POSTGRES_PASSWORD: 'yourDbPasswordHere'
+    POSTGRES_PORT: 'yourPostgresPortHere'
+    POSTGRES_SSL: disable # enable/disable Per your setup
+    POSTGRES_TIMEZONE: Etc/UCT
+    POSTGRES_USER: yourPostgresUserName
