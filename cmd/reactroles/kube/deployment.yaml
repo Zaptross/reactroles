@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: reactroles
+    labels:
+        name: reactroles
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: reactroles
+    namespace: reactroles
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: reactroles
+    template:
+        metadata:
+            labels:
+                app: reactroles
+        spec:
+            containers:
+                - name: reactroles
+                  image: zaptross/reactroles:latest
+                  resources:
+                      limits:
+                          memory: '128Mi'
+                          cpu: '500m'
+                  envFrom:
+                      - configMapRef:
+                            name: reactroles-cfg
