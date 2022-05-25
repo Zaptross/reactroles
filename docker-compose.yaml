@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  postgres:
+    image: "postgres:latest"
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      - "POSTGRES_DB=${POSTGRES_DB}"
+    restart: unless-stopped
+  reactroles:
+    image: zaptross/reactroles
+    links:
+      - "postgres"
+    depends_on:
+      - postgres
+    environment:
+      - "DISCORD_TOKEN=${DISCORD_TOKEN}"
+      - "DISCORD_ROLECHANNEL=${DISCORD_ROLECHANNEL}"
+      - "DISCORD_ROLEMESSAGE=${DISCORD_ROLEMESSAGE}"
+      - "DISCORD_ROLEADDROLEID=${DISCORD_ROLEADDROLEID}"
+      - "DISCORD_ROLEREMOVEROLEID=${DISCORD_ROLEREMOVEROLEID}"
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      - "POSTGRES_DB=${POSTGRES_DB}"
+      - "POSTGRES_PORT=${POSTGRES_PORT}"
+      - "POSTGRES_HOST=${POSTGRES_HOST}"
+      - "POSTGRES_SSL=${POSTGRES_SSL}"
+      - "POSTGRES_TIMEZONE=${POSTGRES_TIMEZONE}"

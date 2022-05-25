@@ -1,0 +1,15 @@
+**/Dockerfile
+**/*.md
+**/*.sh
+**/*.code-workspace
+**/.DS_Store
+**/*.exe
+**/*.json
+**/.git
+.gitignore
+.dockerignore
+.vscode
+
+**/*.yml
+.env
+*.env*
