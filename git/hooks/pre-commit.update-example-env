@@ -1,0 +1,31 @@
+#!/bin/bash
+
+getEnvName() {
+  
+  check=$1
+  if [ ${#check} -ge 3 ]; then
+    echo "${1%=*}="
+  else 
+    echo "$1"
+  fi
+}
+
+if test -f "example.env"; then
+  rm example.env
+  echo "Removed example.env before updating..."
+fi
+
+while IFS="" read -r p || [ -n "$p" ]
+do
+  if [[ $p == \#* ]]; then
+    echo $p >> example.env
+  else
+    echo "$(getEnvName $p)" >> example.env
+  fi
+done < .env
+
+echo "Updated example.env successfully"
+
+git add example.env
+
+(exit 0)
