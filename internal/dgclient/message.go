@@ -92,12 +92,6 @@ func isRoleCommand(command string) bool {
 }
 
 func roleCommandHandler(params RoleCommandParams) {
-	defer (func() {
-		if params.Session.ChannelMessageDelete(params.Message.ChannelID, params.Message.ID) != nil {
-			log.Printf("Failed to delete message %s:%s\n", params.Message.ChannelID, params.Message.ID)
-		}
-	})()
-
 	defer params.Client.updateRoleSelectorMessage()
 
 	validateErr := validateRoleCommand(params)
@@ -109,6 +103,11 @@ func roleCommandHandler(params RoleCommandParams) {
 		case "remove":
 			handleRemoveAction(params)
 		}
+
+		if params.Session.ChannelMessageDelete(params.Message.ChannelID, params.Message.ID) != nil {
+			log.Printf("Failed to delete message %s:%s\n", params.Message.ChannelID, params.Message.ID)
+		}
+
 	} else {
 		params.Session.ChannelMessageSendReply(params.Message.ChannelID, fmt.Sprintf("⚠ Error: %s\nUsage: !role <add/remove> <role name> <emoji> [colour hex]\nNote: [] is optional\n\nExamples:\n!role add valorant :gun: #d34454\n!role add valorant :gun:\n!role remove valorant", validateErr), params.Message.Reference())
 	}
