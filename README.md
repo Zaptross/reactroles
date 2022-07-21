@@ -22,7 +22,7 @@ Usage examples:
 
 When a command is successful, the bot will remove the your message containing the command and update the roles selector accordingly.
 
-If unsuccessful, the bot will reply with an error message and usage then delete your message containing the command.
+If unsuccessful, the bot will reply with an error message and usage.
 
 # Setup
 
