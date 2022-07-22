@@ -1,7 +1,6 @@
 package dgclient
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -111,46 +110,6 @@ func roleCommandHandler(params RoleCommandParams) {
 	} else {
 		params.Session.ChannelMessageSendReply(params.Message.ChannelID, fmt.Sprintf("⚠ Error: %s\nUsage: !role <add/remove> <role name> <emoji> [colour hex]\nNote: [] is optional\n\nExamples:\n!role add valorant :gun: #d34454\n!role add valorant :gun:\n!role remove valorant", validateErr), params.Message.Reference())
 	}
-}
-
-func validateRoleCommand(params RoleCommandParams) error {
-	if params.Action != "add" && params.Action != "remove" {
-		return errors.New("invalid action")
-	}
-
-	if params.RoleName == "" {
-		return errors.New("no role name specified")
-	}
-
-	if params.Action == "add" {
-		if !validateUserHasRole(params.Session, params.Message.GuildID, params.Message.Author.ID, params.Client.roleAddRoleID) {
-			return errors.New("you do not have permission to add roles")
-		}
-
-		if params.EmojiName == "" {
-			return errors.New("no emoji specified")
-		}
-
-		if params.Client.db.RoleIsNameTaken(params.RoleName) {
-			return errors.New("role name is already taken")
-		}
-
-		if params.Client.db.RoleIsEmojiTaken(params.EmojiName) {
-			return errors.New("emoji is already taken")
-		}
-	}
-
-	if params.Action == "remove" {
-		if !validateUserHasRole(params.Session, params.Message.GuildID, params.Message.Author.ID, params.Client.roleRemoveRoleID) {
-			return errors.New("you do not have permission to remove roles")
-		}
-
-		if !params.Client.db.RoleIsNameTaken(params.RoleName) {
-			return errors.New("role name does not exist")
-		}
-	}
-
-	return nil
 }
 
 func handleAddAction(params RoleCommandParams) {
