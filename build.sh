@@ -1,1 +1,2 @@
-docker buildx build --platform linux/amd64,linux/arm64 -t zaptross/reactroles:latest -f ./Dockerfile . --rm --push
+read -p "Please enter version: " version
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg version="$version \($(git rev-parse --short HEAD)\)" -t zaptross/reactroles:$version -f ./Dockerfile .
