@@ -3,6 +3,7 @@ package dgclient
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -14,6 +15,12 @@ func (client *DiscordGoClient) updateRoleSelectorMessage() {
 		"To join a role, react with the corresponding emoji to this message.",
 		"To leave a role, remove the reaction from this message.\n",
 		"**Roles**",
+	}
+
+	ver, vErr := getVersionMessageIfPossible()
+
+	if vErr == nil {
+		roleLines = append([]string{ver}, roleLines...)
 	}
 
 	if len(roles) == 0 {
@@ -31,4 +38,14 @@ func (client *DiscordGoClient) updateRoleSelectorMessage() {
 	if err != nil {
 		log.Println(err.Error())
 	}
+}
+
+func getVersionMessageIfPossible() (string, error) {
+	dat, err := os.ReadFile("/etc/program-version")
+
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("V %s", string(dat)), nil
 }
