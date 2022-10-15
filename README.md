@@ -12,15 +12,56 @@ To add a role to yourself as a user you simply click one of the reactions on the
 
 If a user has the roles (as configured below) that gives the permission to use role management commands:
 
--   `!role <add/remove> <role name> <emoji> [colour]`
+### Conventions
+
+-   < > : a required parameter
+-   [ ] : an optional parameter
+
+### Add Command
+
+Adds a new role to the discord, configured as specified.
+
+-   `!role add <role name> <emoji> [colour]`
 
 Usage examples:
 
 -   `!role add valorant :gun: #d34454`
 -   `!role add valorant :gun:`
+
+### Remove Command
+
+Removes a role and it's reacions from the discord.
+
+-   `!role remove <role name>`
+
+Usage example:
+
 -   `!role remove valorant`
 
-When a command is successful, the bot will remove the your message containing the command and update the roles selector accordingly.
+### Update Command
+
+Modifies any one part of a role.
+Where role fields are `name`, `emoji` and `color`, and role field values are valid values of those fields as per the `add` role command.
+
+-   `!role update <role name> <role field> <role field value>`
+
+Usage examples:
+
+-   `!role update valorant name coolgungame`
+-   `!role update valorant emoji 😎`
+-   `!role update valorant color #CADEAA`
+
+### Help Command
+
+Replies to the user the help text accompanying the command.
+
+-   `!role help <action>`
+
+Usage example:
+
+-   `!role help add`
+
+As of v2.6.0 (3ee3b59)
 
 If unsuccessful, the bot will reply with an error message and usage.
 
