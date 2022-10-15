@@ -56,6 +56,8 @@ func handleHelpAction(params RoleCommandParams) {
 	switch helpParams.Action {
 	case Actions.Add:
 		params.Session.ChannelMessageSendReply(params.Message.ChannelID, addRoleHelp(), params.Message.Reference())
+	case Actions.Update:
+		params.Session.ChannelMessageSendReply(params.Message.ChannelID, updateRoleHelp(), params.Message.Reference())
 	case Actions.Remove:
 		params.Session.ChannelMessageSendReply(params.Message.ChannelID, removeRoleHelp(), params.Message.Reference())
 	default:

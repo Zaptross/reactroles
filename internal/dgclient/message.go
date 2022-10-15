@@ -88,6 +88,8 @@ func roleCommandHandler(params RoleCommandParams) {
 	switch params.Action {
 	case Actions.Add:
 		handleAddAction(params)
+	case Actions.Update:
+		handleUpdateAction(params)
 	case Actions.Remove:
 		handleRemoveAction(params)
 	case Actions.Help:
