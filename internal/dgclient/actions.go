@@ -7,11 +7,13 @@ import (
 type ActionNames struct {
 	Add    string
 	Remove string
+	Update string
 	Help   string
 }
 
 var Actions = ActionNames{
 	Add:    "add",
+	Update: "update",
 	Remove: "remove",
 	Help:   "help",
 }

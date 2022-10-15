@@ -23,8 +23,18 @@ func (db *ReactRolesDatabase) RoleGetIdByName(name string) string {
 	return role.ID
 }
 
+func (db *ReactRolesDatabase) GetRoleByName(name string) Role {
+	var role Role
+	db.DB.Where("name = ?", name).First(&role)
+	return role
+}
+
 func (db *ReactRolesDatabase) RoleAdd(id string, emoji string, name string) {
 	db.DB.Create(&Role{ID: id, Emoji: emoji, Name: name})
+}
+
+func (db *ReactRolesDatabase) RoleUpdate(id string, emoji string, name string) {
+	db.DB.Model(&Role{}).Where("id = ?", id).Updates(Role{Emoji: emoji, Name: name})
 }
 
 func (db *ReactRolesDatabase) RoleRemove(id string) {
