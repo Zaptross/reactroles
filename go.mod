@@ -2,7 +2,10 @@ module github.com/zaptross/reactroles
 
 go 1.18
 
-require github.com/bwmarrin/discordgo v0.25.0
+require (
+	github.com/bwmarrin/discordgo v0.25.0
+	gorm.io/gorm v1.23.4
+)
 
 require (
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
@@ -16,13 +19,12 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gorm.io/gorm v1.23.4 // indirect
 )
 
 require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	gorm.io/driver/postgres v1.3.6
 )
