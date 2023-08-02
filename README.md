@@ -74,7 +74,7 @@ Before deploying your own, you will need to make a discord bot, and add it to yo
 
 ## Docker
 
-You can check out the image versions over on [Docker Hub](https://hub.docker.com/repository/docker/zaptross/reactroles)
+You can check out the image versions over on [Docker Hub](https://hub.docker.com/r/zaptross/reactroles)
 
 1. Clone the repo to your machine
 2. Duplicate `./example.env` and rename it to `.env`
