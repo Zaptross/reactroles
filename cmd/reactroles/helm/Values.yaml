@@ -15,20 +15,19 @@ fullnameOverride: ""
 
 reactroles:
   discord:
-    role:
-      channel: "roleChannelIdHere"
-      message: "roleMessageIdHere"
-      addRoleId: "roleIdHere"
-      removeRoleId: "roleIdHere"
-    token: yourBotTokenHere
+    DISCORD_ROLECHANNEL: "roleChannelIdHere"
+    DISCORD_ROLEMESSAGE: "roleMessageIdHere"
+    DISCORD_ROLEADDROLEID: "roleIdHere"
+    DISCORD_ROLEREMOVEROLEID: "roleIdHere"
+    DISCORD_TOKEN: yourBotTokenHere
   postgres:
-    db: reactroles
-    host: your.postgres.host
-    password: "yourDbPasswordHere"
-    port: "yourPostgresPortHere"
-    ssl: disable
-    timezone: Etc/UCT
-    user: yourPostgresUserName
+    POSTGRES_DB: db
+    POSTGRES_HOST: reactroles
+    POSTGRES_PASSWORD: your.postgres.host
+    POSTGRES_PORT: "yourDbPasswordHere"
+    POSTGRES_SSL: disable
+    POSTGRES_TIMEZONE: Etc/UCT
+    POSTGRES_USER: yourPostgresUserName
 
 serviceAccount:
   # Specifies whether a service account should be created
