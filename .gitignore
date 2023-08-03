@@ -26,3 +26,5 @@ go.work
 
 # Vscode files
 .vscode/launch.json
+
+cmd/reactroles/helm/[Vv]alues.*.yaml
