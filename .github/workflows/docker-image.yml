@@ -1,48 +1,48 @@
 name: Docker Image CI
 
 on:
-    push:
-        branches:
-            - main
-            - ci/**
+  push:
+    branches:
+      - main
+      - ci/**
 
 jobs:
-    build:
-        environment: Image Build
-        runs-on: ubuntu-latest
+  build:
+    environment: Image Build
+    runs-on: ubuntu-latest
 
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                  fetch-depth: 0
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-            - name: Set up Docker Buildx
-              id: buildx
-              uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
 
-            - name: Set outputs
-              id: get_sha
-              run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: Set outputs
+        id: get_sha
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-            - name: Dockerhub Login
-              uses: docker/login-action@v1
-              with:
-                  username: ${{ secrets.DOCKERHUB_USERNAME }}
-                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Dockerhub Login
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            - uses: paulhatch/semantic-version@v4.0.2
-              id: get_version
-              with:
-                  # The prefix to use to identify tags
-                  tag_prefix: 'v'
-                  # A string which, if present in a git commit, indicates that a change represents a
-                  # major (breaking) change, supports regular expressions wrapped with '/'
-                  major_pattern: /!/
-                  # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
-                  minor_pattern: /build|ci|feat|refactor|revert|style/
-                  # A string to determine the format of the version output
-                  format: '${major}.${minor}.${patch}'
-                  # If this is set to true, *every* commit will be treated as a new version.
-                  bump_each_commit: true
+      - uses: paulhatch/semantic-version@v4.0.2
+        id: get_version
+        with:
+          # The prefix to use to identify tags
+          tag_prefix: "v"
+          # A string which, if present in a git commit, indicates that a change represents a
+          # major (breaking) change, supports regular expressions wrapped with '/'
+          major_pattern: /!/
+          # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
+          minor_pattern: /feat|refactor|revert|style/
+          # A string to determine the format of the version output
+          format: "${major}.${minor}.${patch}"
+          # If this is set to true, *every* commit will be treated as a new version.
+          bump_each_commit: true
 
-            - run: docker buildx build --platform linux/amd64,linux/arm64 --build-arg version="${{ steps.get_version.outputs.version }} \(${{ steps.get_sha.outputs.sha_short }}\)" -t zaptross/reactroles:${{ steps.get_version.outputs.version }} -t zaptross/reactroles:latest -f ./Dockerfile . --push
+      - run: docker buildx build --platform linux/amd64,linux/arm64 --build-arg version="${{ steps.get_version.outputs.version }} \(${{ steps.get_sha.outputs.sha_short }}\)" -t zaptross/reactroles:${{ steps.get_version.outputs.version }} -t zaptross/reactroles:latest -f ./Dockerfile . --push
