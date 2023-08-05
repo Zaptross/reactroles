@@ -52,7 +52,15 @@ func handleRemoveAction(params RoleCommandParams) {
 		return
 	}
 
-	reactRemoveErr := params.Session.MessageReactionsRemoveEmoji(params.Client.roleMessage.ChannelID, params.Client.roleMessage.ID, role.Emoji)
+	selectorForRole, err := findSelectorForRole(params.Client.selectors, role)
+
+	if err != nil {
+		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error finding selector for role", params.Message.Reference())
+		println(err.Error())
+		return
+	}
+
+	reactRemoveErr := params.Session.MessageReactionsRemoveEmoji(params.Client.RoleChannel, selectorForRole.ID, role.Emoji)
 	if reactRemoveErr != nil {
 		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error removing reaction", params.Message.Reference())
 		println(reactRemoveErr.Error())

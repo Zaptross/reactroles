@@ -11,9 +11,12 @@ type validHelpParams struct {
 }
 
 func helpRoleHelp() string {
-	return `Usage: !role help <action>
-!role help add
-!role help remove`
+	return fmt.Sprintf(`Usage: !role help <action>
+The available actions are: %s
+
+Examples:
+!role help add`,
+		strings.Join(Actions.All(), ", "))
 }
 
 func validateParamsForHelp(params RoleCommandParams) (validHelpParams, error) {

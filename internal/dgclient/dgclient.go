@@ -21,7 +21,8 @@ type DiscordGoClientParams struct {
 
 type DiscordGoClient struct {
 	Session          *discordgo.Session
-	roleMessage      *discordgo.Message
+	selectors        []*discordgo.Message
+	RoleChannel      string
 	roleAddRoleID    string
 	roleRemoveRoleID string
 	db               *pgdb.ReactRolesDatabase
@@ -41,6 +42,7 @@ func GetClient(params DiscordGoClientParams) *DiscordGoClient {
 
 	client := &DiscordGoClient{
 		Session:          dg,
+		RoleChannel:      params.RoleChannel,
 		roleAddRoleID:    params.RoleAddRoleID,
 		roleRemoveRoleID: params.RoleRemoveRoleID,
 		db:               params.DB,
@@ -52,27 +54,39 @@ func GetClient(params DiscordGoClientParams) *DiscordGoClient {
 		log.Printf("[dgclient] Version: %s\n", version)
 	}
 
-	if params.RoleChannel != "" && params.RoleMessage == "" {
+	selectors := client.db.SelectorGetAll()
+
+	if params.RoleChannel != "" && len(selectors) == 0 {
 		message, err := dg.ChannelMessageSend(params.RoleChannel, "Setting up role assignment message...")
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		client.roleMessage = message
+		client.db.SelectorCreate(message)
+		client.selectors = []*discordgo.Message{message}
 
-		log.Printf("[dgclient] Role message created: %s\n", message.ID)
+		log.Printf("[dgclient] Role selector created: %s\n", message.ID)
 	}
 
-	if params.RoleMessage != "" {
-		message, err := dg.ChannelMessage(params.RoleChannel, params.RoleMessage)
+	if len(selectors) > 0 {
+		client.selectors = make([]*discordgo.Message, len(selectors))
 
-		if err != nil {
-			log.Fatal(err)
+		for i, selector := range selectors {
+			message, err := dg.ChannelMessage(selector.ChannelID, selector.ID)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			client.selectors[i] = message
 		}
 
-		client.roleMessage = message
-		log.Println("[dgclient] Role message found...")
+		multipleSelectors := ""
+		if len(client.selectors) > 1 {
+			multipleSelectors = "s"
+		}
+		log.Printf("[dgclient] Role selector%s found...\n", multipleSelectors)
 	}
 
 	return client

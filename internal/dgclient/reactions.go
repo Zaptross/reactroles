@@ -8,7 +8,7 @@ import (
 
 func (client *DiscordGoClient) GetOnReactionAddHandler() func(*discordgo.Session, *discordgo.MessageReactionAdd) {
 	return func(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
-		if m.UserID == s.State.User.ID || m.MessageID != client.roleMessage.ID || !client.db.RoleIsEmojiTaken(m.Emoji.Name) {
+		if m.UserID == s.State.User.ID || !isReactingToSelector(client.selectors, m.MessageID) || !client.db.RoleIsEmojiTaken(m.Emoji.Name) {
 			return
 		}
 
@@ -22,7 +22,7 @@ func (client *DiscordGoClient) GetOnReactionAddHandler() func(*discordgo.Session
 
 func (client *DiscordGoClient) GetOnReactionRemoveHandler() func(*discordgo.Session, *discordgo.MessageReactionRemove) {
 	return func(s *discordgo.Session, m *discordgo.MessageReactionRemove) {
-		if m.UserID == s.State.User.ID || m.MessageID != client.roleMessage.ID || !client.db.RoleIsEmojiTaken(m.Emoji.Name) {
+		if m.UserID == s.State.User.ID || !isReactingToSelector(client.selectors, m.MessageID) || !client.db.RoleIsEmojiTaken(m.Emoji.Name) {
 			return
 		}
 
@@ -32,4 +32,14 @@ func (client *DiscordGoClient) GetOnReactionRemoveHandler() func(*discordgo.Sess
 			log.Println(roleErr.Error())
 		}
 	}
+}
+
+func isReactingToSelector(selectors []*discordgo.Message, messageID string) bool {
+	for _, selector := range selectors {
+		if selector.ID == messageID {
+			return true
+		}
+	}
+
+	return false
 }

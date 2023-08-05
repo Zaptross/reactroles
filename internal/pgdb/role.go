@@ -64,3 +64,9 @@ func (db *ReactRolesDatabase) RoleIsNameTaken(name string) bool {
 	db.DB.Where("name = ?", name).First(&role)
 	return role.ID != ""
 }
+
+func (db *ReactRolesDatabase) RoleGetCount() int {
+	var count int64
+	db.DB.Model(&Role{}).Count(&count)
+	return int(count)
+}

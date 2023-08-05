@@ -57,6 +57,10 @@ func splitRoleCommand(command string) (string, []string) {
 	// Split and slice out the !role part of the command
 	split := strings.Split(command, " ")[1:]
 
+	if len(split) == 0 || (split[0] == "help" && len(split) == 1) {
+		return Actions.Help, []string{Actions.Help}
+	}
+
 	return strings.ToLower(split[0]), split[1:]
 }
 
