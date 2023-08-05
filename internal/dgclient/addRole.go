@@ -83,7 +83,14 @@ func handleAddAction(params RoleCommandParams) {
 
 	params.Client.db.RoleAdd(role.ID, addRoleParams.Emoji, addRoleParams.Name)
 
-	reactAddErr := params.Session.MessageReactionAdd(params.Client.roleMessage.ChannelID, params.Client.roleMessage.ID, addRoleParams.Emoji)
+	rolesCount := params.Client.db.RoleGetCount()
+
+	if rolesCount%ROLES_PER_SELECTOR > 0 {
+		params.Client.updateRoleSelectorMessage() // update selectors early if we need a new one
+	}
+
+	lastSelectorId := params.Client.selectors[len(params.Client.selectors)-1].ID
+	reactAddErr := params.Session.MessageReactionAdd(params.Client.RoleChannel, lastSelectorId, addRoleParams.Emoji)
 	if reactAddErr != nil {
 		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error adding reaction", params.Message.Reference())
 		println(reactAddErr.Error())
