@@ -46,6 +46,12 @@ func GetClient(params DiscordGoClientParams) *DiscordGoClient {
 		db:               params.DB,
 	}
 
+	version, err := getVersionMessageIfPossible()
+
+	if err == nil {
+		log.Printf("[dgclient] Version: %s\n", version)
+	}
+
 	if params.RoleChannel != "" && params.RoleMessage == "" {
 		message, err := dg.ChannelMessageSend(params.RoleChannel, "Setting up role assignment message...")
 
