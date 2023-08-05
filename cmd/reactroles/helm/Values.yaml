@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: zaptross/reactroles
   pullPolicy: IfNotPresent
-  tag: 2.14.0
+  tag: 2.7.0
 
 imagePullSecrets: []
 nameOverride: ""
@@ -16,7 +16,6 @@ fullnameOverride: ""
 reactroles:
   discord:
     DISCORD_ROLECHANNEL: "roleChannelIdHere"
-    DISCORD_ROLEMESSAGE: "roleMessageIdHere"
     DISCORD_ROLEADDROLEID: "roleIdHere"
     DISCORD_ROLEREMOVEROLEID: "roleIdHere"
     DISCORD_TOKEN: yourBotTokenHere
