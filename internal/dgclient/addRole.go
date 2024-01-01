@@ -14,12 +14,12 @@ type validAddRoleParams struct {
 }
 
 func addRoleHelp() string {
-	return `Usage: !role add <role name> <emoji> [colour hex]
+	return `Usage: /role add <role name> <emoji> [colour hex]
 Note: [] is optional
 
 Examples:
-!role add valorant :gun: #d34454
-!role add valorant :gun:`
+/role add valorant :gun: #d34454
+/role add valorant :gun:`
 }
 
 // !role add <0: role name> <1: emoji> [2: color]

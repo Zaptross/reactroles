@@ -3,6 +3,8 @@ package dgclient
 import (
 	"errors"
 	"fmt"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 type validRemoveRoleParams struct {
@@ -10,10 +12,10 @@ type validRemoveRoleParams struct {
 }
 
 func removeRoleHelp() string {
-	return `Usage: !role remove <role name>
+	return `Usage: /role remove @<role>
 	
 	Examples:
-	!role remove valorant`
+	/role remove @valorant`
 }
 
 // !role remove <0: role name>
@@ -21,7 +23,7 @@ func validateParamsForRemove(params RoleCommandParams) (validRemoveRoleParams, e
 	removeRoleParams := validRemoveRoleParams{}
 	RoleName := params.Rest[0]
 
-	if !validateUserHasRole(params.Session, params.Message.GuildID, params.Message.Author.ID, params.Client.roleAddRoleID) {
+	if !validateUserHasRole(params.Session, params.GuildID(), params.AuthorID(), params.Client.roleAddRoleID) {
 		return removeRoleParams, errors.New("you do not have permission to remove roles")
 	}
 
@@ -38,16 +40,16 @@ func handleRemoveAction(params RoleCommandParams) {
 	removeRoleParams, err := validateParamsForRemove(params)
 
 	if err != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, fmt.Sprintf("⚠ Error: %s\n%s", err, removeRoleHelp()), params.Message.Reference())
+		params.Reply(fmt.Sprintf("⚠ Error: %s\n%s", err, removeRoleHelp()))
 		return
 	}
 
 	id := params.Client.db.RoleGetIdByName(removeRoleParams.Name)
 	role := params.Client.db.RoleGetById(id)
 
-	deleteErr := params.Session.GuildRoleDelete(params.Message.GuildID, id)
+	deleteErr := params.Session.GuildRoleDelete(params.GuildID(), id)
 	if deleteErr != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error deleting role", params.Message.Reference())
+		params.Reply("Error deleting role")
 		println(deleteErr.Error())
 		return
 	}
@@ -55,17 +57,49 @@ func handleRemoveAction(params RoleCommandParams) {
 	selectorForRole, err := findSelectorForRole(params.Client.selectors, role)
 
 	if err != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error finding selector for role", params.Message.Reference())
+		params.Reply("Error finding selector for role")
 		println(err.Error())
 		return
 	}
 
 	reactRemoveErr := params.Session.MessageReactionsRemoveEmoji(params.Client.RoleChannel, selectorForRole.ID, role.Emoji)
 	if reactRemoveErr != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error removing reaction", params.Message.Reference())
+		params.Reply("Error removing reaction")
 		println(reactRemoveErr.Error())
 		return
 	}
 
 	params.Client.db.RoleRemove(id)
+	params.Reply(fmt.Sprintf("Removed role %s %s", removeRoleParams.Name, role.Emoji))
+}
+
+func removeRoleSlashCommand() *discordgo.ApplicationCommandOption {
+	return &discordgo.ApplicationCommandOption{
+		Name:        Actions.Remove,
+		Description: "Remove a role",
+		Type:        discordgo.ApplicationCommandOptionSubCommand,
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Name:        "role",
+				Description: "The role to remove",
+				Required:    true,
+			},
+		},
+	}
+}
+
+func handleRemoveRoleSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	sc := i.ApplicationCommandData().Options[0]
+	role := sc.Options[0].RoleValue(s, i.GuildID)
+
+	params := RoleCommandParams{
+		Session:     s,
+		Interaction: i,
+		Rest:        []string{role.Name},
+		Client:      client,
+		Action:      Actions.Remove,
+	}
+
+	handleRemoveAction(params)
 }
