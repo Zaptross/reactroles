@@ -14,6 +14,8 @@ func (client *DiscordGoClient) GetOnInteractionHandler() func(*discordgo.Session
 			},
 		})
 
+		defer client.updateRoleSelectorMessage()
+
 		if i.Member.User.ID == s.State.User.ID {
 			return
 		}
@@ -21,6 +23,8 @@ func (client *DiscordGoClient) GetOnInteractionHandler() func(*discordgo.Session
 		switch i.ApplicationCommandData().Options[0].Name {
 		case Actions.Add:
 			handleAddRoleSlashCommand(client, s, i)
+		case Actions.Remove:
+			handleRemoveRoleSlashCommand(client, s, i)
 		}
 	}
 }
@@ -31,6 +35,7 @@ func (client *DiscordGoClient) GetSlashCommand() *discordgo.ApplicationCommand {
 		Description: "Manage roles",
 		Options: []*discordgo.ApplicationCommandOption{
 			addRoleSlashCommand(),
+			removeRoleSlashCommand(),
 		},
 	}
 }
