@@ -11,6 +11,10 @@ type ActionNames struct {
 	Help   string
 }
 
+const (
+	ActionConfigure = "configure"
+)
+
 var Actions = ActionNames{
 	Add:    "add",
 	Update: "update",
