@@ -8,14 +8,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-type RoleCommandParams struct {
-	Session *discordgo.Session
-	Message *discordgo.MessageCreate
-	Client  *DiscordGoClient
-	Action  string
-	Rest    []string
-}
-
 func (client *DiscordGoClient) GetOnMessageHandler() func(*discordgo.Session, *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {

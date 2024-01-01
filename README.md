@@ -14,8 +14,8 @@ If a user has the roles (as configured below) that gives the permission to use r
 
 ### Conventions
 
-- < > : a required parameter
-- [ ] : an optional parameter
+- <> : a required parameter
+- [] : an optional parameter
 
 ### Add Command
 
@@ -70,7 +70,7 @@ If unsuccessful, the bot will reply with an error message and usage.
 Before deploying your own, you will need to make a discord bot, and add it to your server.
 
 - Discord application creation: https://discord.com/developers/applications
-- Discord oauth2 link generator(with correct permissions preconfigured): https://discordapi.com/permissions.html#268512320
+- Discord oauth2 link generator(with correct permissions preconfigured): https://discordapi.com/permissions.html#2415995968
 
 ## Docker
 
