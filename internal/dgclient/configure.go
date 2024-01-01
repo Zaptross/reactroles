@@ -39,6 +39,25 @@ func configureServerSlashCommand() *discordgo.ApplicationCommandOption {
 				Description: "The role which gives permission to update roles. (Make a new role, or use the same role as the add.)",
 				Required:    true,
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionBoolean,
+				Name:        "channel-creation",
+				Description: "Is channel creation enabled?",
+				Required:    true,
+			},
+			{
+				Type:         discordgo.ApplicationCommandOptionChannel,
+				Name:         "category",
+				Description:  "The category to create channels in.",
+				Required:     true,
+				ChannelTypes: []discordgo.ChannelType{discordgo.ChannelTypeGuildCategory},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionBoolean,
+				Name:        "cascade-delete",
+				Description: "Should channels be deleted when the role is removed? (If false, channels must be deleted manually.)",
+				Required:    true,
+			},
 		},
 	}
 }
@@ -57,6 +76,9 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	addRole := sc.Options[1].RoleValue(s, i.GuildID)
 	removeRole := sc.Options[2].RoleValue(s, i.GuildID)
 	updateRole := sc.Options[3].RoleValue(s, i.GuildID)
+	channelCreate := sc.Options[4].BoolValue()
+	channelCategory := sc.Options[5].ChannelValue(s)
+	cascadeDelete := sc.Options[6].BoolValue()
 
 	err := validateServerConfiguration(channel, addRole, removeRole, updateRole)
 
@@ -70,10 +92,10 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	oldRoles := []string{}
 
 	if server.GuildID != "" {
-		client.db.ServerConfigurationUpdate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID)
+		client.db.ServerConfigurationUpdate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCategory.ID, cascadeDelete)
 		oldRoles = []string{server.SelectorChannelID, server.RoleAddRoleID, server.RoleRemoveRoleID, server.RoleUpdateRoleID}
 	} else {
-		client.db.ServerConfigurationCreate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID)
+		client.db.ServerConfigurationCreate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCategory.ID, cascadeDelete)
 	}
 
 	client.updateRoleSelectorMessage(i.GuildID)
