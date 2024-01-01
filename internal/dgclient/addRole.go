@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/zaptross/reactroles/internal/pgdb"
 )
 
 type validAddRoleParams struct {
@@ -30,7 +31,7 @@ func validateParamsForAdd(params RoleCommandParams) (validAddRoleParams, error) 
 	RoleEmoji := params.Rest[1]
 	RoleColor := params.Rest[2]
 
-	if !validateUserHasRole(params.Session, params.GuildID(), params.AuthorID(), params.Client.roleAddRoleID) {
+	if !validateUserHasRole(params.Session, params.GuildID(), params.AuthorID(), params.Server.RoleAddRoleID) {
 		return addRoleParams, errors.New("you do not have permission to add roles")
 	}
 
@@ -83,17 +84,19 @@ func handleAddAction(params RoleCommandParams) {
 		return
 	}
 
-	params.Client.db.RoleAdd(role.ID, addRoleParams.Emoji, addRoleParams.Name)
+	params.Client.db.RoleAdd(role.ID, addRoleParams.Emoji, addRoleParams.Name, params.GuildID())
 	params.Reply(fmt.Sprintf("Role %s %s added", role.Mention(), addRoleParams.Emoji))
 
-	rolesCount := params.Client.db.RoleGetCount()
+	rolesCount := params.Client.db.RoleGetCount(params.GuildID())
 
 	if rolesCount%ROLES_PER_SELECTOR > 0 {
-		params.Client.updateRoleSelectorMessage() // update selectors early if we need a new one
+		// update selectors early if we need a new one
+		params.Client.updateRoleSelectorMessage(params.GuildID())
 	}
 
-	lastSelectorId := params.Client.selectors[len(params.Client.selectors)-1].ID
-	reactAddErr := params.Session.MessageReactionAdd(params.Client.RoleChannel, lastSelectorId, addRoleParams.Emoji)
+	selectors := params.Client.db.SelectorGetAll(params.GuildID())
+	lastSelectorId := selectors[len(selectors)-1].ID
+	reactAddErr := params.Session.MessageReactionAdd(params.Server.SelectorChannelID, lastSelectorId, addRoleParams.Emoji)
 	if reactAddErr != nil {
 		params.Reply("Error adding reaction")
 		println(reactAddErr.Error())
@@ -129,7 +132,7 @@ func addRoleSlashCommand() *discordgo.ApplicationCommandOption {
 	}
 }
 
-func handleAddRoleSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate) {
+func handleAddRoleSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate, server *pgdb.ServerConfiguration) {
 	sc := i.ApplicationCommandData().Options[0]
 	roleName := sc.Options[0].StringValue()
 	roleEmoji := sc.Options[1].StringValue()
@@ -139,6 +142,7 @@ func handleAddRoleSlashCommand(client *DiscordGoClient, s *discordgo.Session, i 
 	}
 
 	params := RoleCommandParams{
+		Server:      server,
 		Session:     s,
 		Interaction: i,
 		Rest:        []string{roleName, roleEmoji, roleColor},

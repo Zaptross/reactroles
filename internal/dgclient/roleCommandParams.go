@@ -2,9 +2,11 @@ package dgclient
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"github.com/zaptross/reactroles/internal/pgdb"
 )
 
 type RoleCommandParams struct {
+	Server      *pgdb.ServerConfiguration
 	Session     *discordgo.Session
 	Message     *discordgo.MessageCreate
 	Interaction *discordgo.InteractionCreate

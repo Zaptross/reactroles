@@ -16,8 +16,17 @@ const (
 	ROLES_PER_SELECTOR = 20
 )
 
-func (client *DiscordGoClient) updateRoleSelectorMessage() {
-	roles := client.db.RoleGetAll()
+func (client *DiscordGoClient) updateAllRoleSelectorMessages() {
+	servers := client.db.GetAllServerConfigurations()
+	for i, server := range servers {
+		log.Printf("[dgclient] Updating role selector message for server %d/%d...\n", i+1, len(servers))
+		client.updateRoleSelectorMessage(server.GuildID)
+	}
+}
+
+func (client *DiscordGoClient) updateRoleSelectorMessage(guildId string) {
+	server := client.db.ServerConfigurationGet(guildId)
+	roles := client.db.RoleGetAll(guildId)
 
 	roleLines := []string{
 		"**Role Selector**",
@@ -34,10 +43,12 @@ func (client *DiscordGoClient) updateRoleSelectorMessage() {
 		roleLines = append([]string{ver}, roleLines...)
 	}
 
+	selectors := lookupMessagesForSelectors(client, client.db.SelectorGetAll(guildId))
+
 	if len(roles) == 0 {
 		roleLines = append(roleLines, "No roles")
 
-		_, err := client.Session.ChannelMessageEdit(client.RoleChannel, client.selectors[0].ID, strings.Join(roleLines, "\n"))
+		_, err := client.Session.ChannelMessageEdit(server.SelectorChannelID, selectors[0].ID, strings.Join(roleLines, "\n"))
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -46,39 +57,39 @@ func (client *DiscordGoClient) updateRoleSelectorMessage() {
 
 	requiredSelectors := int(math.Ceil(float64(len(roles)) / ROLES_PER_SELECTOR))
 
-	if len(client.selectors) < requiredSelectors {
-		for i := len(client.selectors); i < requiredSelectors; i++ {
-			message, err := client.Session.ChannelMessageSend(client.RoleChannel, "Setting up role assignment message...")
+	if len(selectors) < requiredSelectors {
+		for i := len(selectors); i < requiredSelectors; i++ {
+			message, err := client.Session.ChannelMessageSend(server.SelectorChannelID, "Setting up role assignment message...")
 
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			client.db.SelectorCreate(message)
-			client.selectors = append(client.selectors, message)
+			client.db.SelectorCreate(message, guildId)
+			selectors = append(selectors, message)
 
 			log.Printf("[dgclient] Role selector %d created: %s\n", i, message.ID)
 		}
 	}
 
-	if len(client.selectors) > requiredSelectors {
-		for i := len(client.selectors); i > requiredSelectors; i-- {
-			toDeleteId := client.selectors[i-1].ID
+	if len(selectors) > requiredSelectors {
+		for i := len(selectors); i > requiredSelectors; i-- {
+			toDeleteId := selectors[i-1].ID
 
-			err = client.Session.ChannelMessageDelete(client.RoleChannel, toDeleteId)
+			err = client.Session.ChannelMessageDelete(server.SelectorChannelID, toDeleteId)
 
 			if err != nil {
 				log.Println(err.Error())
 			}
 
-			client.db.SelectorDelete(client.selectors[i-1])
-			client.selectors = client.selectors[:i-1]
+			client.db.SelectorDelete(selectors[i-1], guildId)
+			selectors = selectors[:i-1]
 
 			log.Printf("[dgclient] Role selector %d deleted: %s\n", i, toDeleteId)
 		}
 	}
 
-	for i, selector := range client.selectors {
+	for i, selector := range selectors {
 		for j := i * ROLES_PER_SELECTOR; j < (i+1)*ROLES_PER_SELECTOR && j < len(roles); j++ {
 			roleLines = append(roleLines, fmt.Sprintf("%s %s", roles[j].Emoji, roles[j].Name))
 		}

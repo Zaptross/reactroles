@@ -7,6 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/samber/lo"
+	"github.com/zaptross/reactroles/internal/pgdb"
 )
 
 type validHelpParams struct {
@@ -89,7 +90,7 @@ func helpSlashCommand() *discordgo.ApplicationCommandOption {
 	}
 }
 
-func handleHelpSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate) {
+func handleHelpSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate, server *pgdb.ServerConfiguration) {
 	sc := i.ApplicationCommandData().Options[0]
 	command := ""
 	if len(sc.Options) > 0 {
@@ -97,6 +98,7 @@ func handleHelpSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *di
 	}
 
 	params := RoleCommandParams{
+		Server:      server,
 		Session:     s,
 		Interaction: i,
 		Client:      client,

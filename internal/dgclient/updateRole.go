@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/zaptross/reactroles/internal/pgdb"
 )
 
 type validUpdateParams struct {
@@ -79,7 +80,7 @@ func handleUpdateAction(params RoleCommandParams) {
 			return
 		}
 	case "name":
-		params.Client.db.RoleUpdate(role.ID, role.Emoji, updateParams.RoleFieldValueString)
+		params.Client.db.RoleUpdate(role.ID, role.Emoji, updateParams.RoleFieldValueString, params.GuildID())
 
 		guildRoles, grErr := params.Session.GuildRoles(params.GuildID())
 		if grErr != nil {
@@ -97,7 +98,7 @@ func handleUpdateAction(params RoleCommandParams) {
 			}
 		}
 	case "emoji":
-		selectorForRole, err := findSelectorForRole(params.Client.selectors, role)
+		selectorForRole, err := findSelectorForRole(lookupMessagesForSelectors(params.Client, params.Client.db.SelectorGetAll(params.GuildID())), role)
 
 		if err != nil {
 			params.Reply("Error finding selector for role")
@@ -105,21 +106,21 @@ func handleUpdateAction(params RoleCommandParams) {
 			return
 		}
 
-		reactRemoveErr := params.Session.MessageReactionsRemoveEmoji(params.Client.RoleChannel, selectorForRole.ID, role.Emoji)
+		reactRemoveErr := params.Session.MessageReactionsRemoveEmoji(params.Server.SelectorChannelID, selectorForRole.ID, role.Emoji)
 		if reactRemoveErr != nil {
 			params.Reply("Error removing reaction")
 			println(reactRemoveErr.Error())
 			return
 		}
 
-		reactAddErr := params.Session.MessageReactionAdd(params.Client.RoleChannel, selectorForRole.ID, updateParams.RoleFieldValueString)
+		reactAddErr := params.Session.MessageReactionAdd(params.Server.SelectorChannelID, selectorForRole.ID, updateParams.RoleFieldValueString)
 		if reactAddErr != nil {
 			params.Reply("Error adding reaction")
 			println(reactAddErr.Error())
 			return
 		}
 
-		params.Client.db.RoleUpdate(role.ID, updateParams.RoleFieldValueString, role.Name)
+		params.Client.db.RoleUpdate(role.ID, updateParams.RoleFieldValueString, role.Name, params.GuildID())
 	}
 
 	params.Reply(fmt.Sprintf("Successfully updated role %s's %s to %s", role.Name, updateParams.RoleField, updateParams.RoleFieldValueString))
@@ -158,13 +159,14 @@ func updateRoleSlashCommand() *discordgo.ApplicationCommandOption {
 	}
 }
 
-func handleUpdateRoleSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate) {
+func handleUpdateRoleSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate, server *pgdb.ServerConfiguration) {
 	sc := i.ApplicationCommandData().Options[0]
 	role := sc.Options[0].RoleValue(s, i.GuildID)
 	field := sc.Options[1].StringValue()
 	value := sc.Options[2].StringValue()
 
 	params := RoleCommandParams{
+		Server:      server,
 		Session:     s,
 		Interaction: i,
 		Client:      client,
