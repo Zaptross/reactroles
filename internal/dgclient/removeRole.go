@@ -69,6 +69,10 @@ func handleRemoveAction(params RoleCommandParams) {
 		println(reactRemoveErr.Error())
 	}
 
+	if params.Server.ChannelCascadeDelete && (role.TextChannelID != "" || role.VoiceChannelID != "") {
+		deleteChannelsForRole(params.Client, params.GuildID(), role.TextChannelID, role.VoiceChannelID)
+	}
+
 	params.Client.db.RoleRemove(id, params.GuildID())
 	params.Reply(fmt.Sprintf("Removed role %s %s", removeRoleParams.Name, role.Emoji))
 }
@@ -103,4 +107,22 @@ func handleRemoveRoleSlashCommand(client *DiscordGoClient, s *discordgo.Session,
 	}
 
 	handleRemoveAction(params)
+}
+
+func deleteChannelsForRole(client *DiscordGoClient, guildID string, textChannel string, voiceChannel string) {
+	if textChannel != "" {
+		_, err := client.Session.ChannelDelete(textChannel)
+
+		if err != nil {
+			println(err.Error())
+		}
+	}
+
+	if voiceChannel != "" {
+		_, err := client.Session.ChannelDelete(voiceChannel)
+
+		if err != nil {
+			println(err.Error())
+		}
+	}
 }

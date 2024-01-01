@@ -20,13 +20,6 @@ func createChannelSlashCommand() *discordgo.ApplicationCommandOption {
 				Required:    true,
 			},
 			{
-				Type:         discordgo.ApplicationCommandOptionChannel,
-				Name:         "category",
-				Description:  "The category to create the channel in.",
-				Required:     true,
-				ChannelTypes: []discordgo.ChannelType{discordgo.ChannelTypeGuildCategory},
-			},
-			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "name",
 				Description: "The name of the channel to create.",
@@ -49,11 +42,18 @@ func createChannelSlashCommand() *discordgo.ApplicationCommandOption {
 func handleCreateChannelSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate, server *pgdb.ServerConfiguration) {
 	sc := i.ApplicationCommandData().Options[0]
 	role := sc.Options[0].RoleValue(s, i.GuildID)
-	category := sc.Options[1].ChannelValue(s)
-	name := sc.Options[2].StringValue()
-	channelType := sc.Options[3].StringValue()
+	name := sc.Options[1].StringValue()
+	channelType := sc.Options[2].StringValue()
 
-	err := validateCreateChannelCommand(client, i.GuildID, role, category, name, channelType, server, i)
+	category, err := client.Session.Channel(server.ChannelCategoryID)
+	if err != nil {
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: fmt.Sprintf("Error getting category: %s", err.Error()),
+		})
+		return
+	}
+
+	err = validateCreateChannelCommand(client, i.GuildID, role, category, name, channelType, server, i)
 	if err != nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Content: fmt.Sprintf("Error: %s", err.Error()),
@@ -67,10 +67,18 @@ func handleCreateChannelSlashCommand(client *DiscordGoClient, s *discordgo.Sessi
 		ParentID: category.ID,
 		PermissionOverwrites: []*discordgo.PermissionOverwrite{
 			{
+				// @me allowed to view channel
+				ID:    client.Session.State.User.ID,
+				Type:  discordgo.PermissionOverwriteTypeMember,
+				Allow: discordgo.PermissionViewChannel,
+			},
+			{
+				// @role allowed to view channel
 				ID:    role.ID,
 				Allow: discordgo.PermissionViewChannel,
 			},
 			{
+				// @everyone not allowed to view channel
 				ID:   i.GuildID,
 				Deny: discordgo.PermissionViewChannel,
 			},
@@ -101,7 +109,7 @@ func validateCreateChannelCommand(client *DiscordGoClient, guildId string, role 
 		return fmt.Errorf("no such role exists")
 	}
 
-	if category == nil {
+	if category.ID == "" {
 		return fmt.Errorf("no such category exists")
 	}
 
