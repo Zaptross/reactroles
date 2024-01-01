@@ -80,7 +80,7 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	channelCategory := sc.Options[5].ChannelValue(s)
 	cascadeDelete := sc.Options[6].BoolValue()
 
-	err := validateServerConfiguration(channel, addRole, removeRole, updateRole)
+	err := validateServerConfiguration(client.Session, i.GuildID, channel, addRole, removeRole, updateRole, i.User)
 
 	if err != nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
@@ -105,7 +105,16 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	})
 }
 
-func validateServerConfiguration(channel *discordgo.Channel, addRole *discordgo.Role, removeRole *discordgo.Role, updateRole *discordgo.Role) error {
+func validateServerConfiguration(session *discordgo.Session, guildId string, channel *discordgo.Channel, addRole *discordgo.Role, removeRole *discordgo.Role, updateRole *discordgo.Role, user *discordgo.User) error {
+	member, err := session.State.Member(channel.GuildID, user.ID)
+	if err != nil {
+		return errors.New("member not found")
+	}
+
+	if member.Permissions&discordgo.PermissionManageWebhooks != discordgo.PermissionManageWebhooks {
+		return errors.New("you must have the Manage Webhooks permission to configure React Roles")
+	}
+
 	if channel.Type != discordgo.ChannelTypeGuildText {
 		return errors.New("role channel must be a text channel")
 	}
