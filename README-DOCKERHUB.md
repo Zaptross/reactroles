@@ -10,10 +10,10 @@ For the most up-to-date information, check the [Github Repo here](https://github
 
 The commands are called by sending messages structured like the following:
 
-- `!role add <role name> <emoji> [colour]`
-- `!role remove <role name>`
-- `!role update <role name> <role field> <role field value>`
-- `!role help <command name>`
+- `/role add <role name> <emoji> [colour]`
+- `/role remove <role name>`
+- `/role update <role name> <role field> <role field value>`
+- `/role help <command name>`
 
 If unsuccessful, the bot will reply with an error message and usage.
 
