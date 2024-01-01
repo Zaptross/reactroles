@@ -30,3 +30,26 @@ func (db *ReactRolesDatabase) ServerConfigurationGet(guildId string) *ServerConf
 	db.DB.Where("guild_id = ?", guildId).First(&config)
 	return &config
 }
+
+func (db *ReactRolesDatabase) ServerConfigurationCreate(guildId string, addRole string, removeRole string, updateRole string, selectorChannel string) *ServerConfiguration {
+	config := &ServerConfiguration{
+		GuildID:           guildId,
+		RoleAddRoleID:     addRole,
+		RoleRemoveRoleID:  removeRole,
+		RoleUpdateRoleID:  updateRole,
+		SelectorChannelID: selectorChannel,
+	}
+
+	db.DB.Create(config)
+
+	return config
+}
+
+func (db *ReactRolesDatabase) ServerConfigurationUpdate(guildId string, addRole string, removeRole string, updateRole string, selectorChannel string) {
+	db.DB.Model(&ServerConfiguration{}).Where("guild_id = ?", guildId).Updates(ServerConfiguration{
+		RoleAddRoleID:     addRole,
+		RoleRemoveRoleID:  removeRole,
+		RoleUpdateRoleID:  updateRole,
+		SelectorChannelID: selectorChannel,
+	})
+}
