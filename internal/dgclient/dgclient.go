@@ -16,6 +16,7 @@ type DiscordGoClientParams struct {
 	RoleChannel      string
 	RoleAddRoleID    string
 	RoleRemoveRoleID string
+	AppID            string
 	DB               *pgdb.ReactRolesDatabase `ignored:"true"`
 }
 

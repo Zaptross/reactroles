@@ -3,6 +3,8 @@ package dgclient
 import (
 	"errors"
 	"fmt"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 type validAddRoleParams struct {
@@ -26,9 +28,9 @@ func validateParamsForAdd(params RoleCommandParams) (validAddRoleParams, error) 
 	addRoleParams := validAddRoleParams{}
 	RoleName := params.Rest[0]
 	RoleEmoji := params.Rest[1]
-	RoleColor := params.Rest[1]
+	RoleColor := params.Rest[2]
 
-	if !validateUserHasRole(params.Session, params.Message.GuildID, params.Message.Author.ID, params.Client.roleAddRoleID) {
+	if !validateUserHasRole(params.Session, params.GuildID(), params.AuthorID(), params.Client.roleAddRoleID) {
 		return addRoleParams, errors.New("you do not have permission to add roles")
 	}
 
@@ -62,26 +64,27 @@ func handleAddAction(params RoleCommandParams) {
 	addRoleParams, err := validateParamsForAdd(params)
 
 	if err != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, fmt.Sprintf("⚠ Error: %s\n%s", err, addRoleHelp()), params.Message.Reference())
+		params.Reply(fmt.Sprintf("⚠ Error: %s\n%s", err, addRoleHelp()))
 		return
 	}
 
-	role, roleCreateErr := params.Session.GuildRoleCreate(params.Message.GuildID)
+	role, roleCreateErr := params.Session.GuildRoleCreate(params.GuildID())
 
 	if roleCreateErr != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error creating role", params.Message.Reference())
+		params.Reply("Error creating role")
 		println(roleCreateErr.Error())
 		return
 	}
 
-	_, editErr := params.Session.GuildRoleEdit(params.Message.GuildID, role.ID, addRoleParams.Name, addRoleParams.Color, false, 0, true)
+	_, editErr := params.Session.GuildRoleEdit(params.GuildID(), role.ID, addRoleParams.Name, addRoleParams.Color, false, 0, true)
 	if editErr != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error editing role", params.Message.Reference())
+		params.Reply("Error editing role")
 		println(editErr.Error())
 		return
 	}
 
 	params.Client.db.RoleAdd(role.ID, addRoleParams.Emoji, addRoleParams.Name)
+	params.Reply(fmt.Sprintf("Role %s %s added", role.Mention(), addRoleParams.Emoji))
 
 	rolesCount := params.Client.db.RoleGetCount()
 
@@ -92,8 +95,56 @@ func handleAddAction(params RoleCommandParams) {
 	lastSelectorId := params.Client.selectors[len(params.Client.selectors)-1].ID
 	reactAddErr := params.Session.MessageReactionAdd(params.Client.RoleChannel, lastSelectorId, addRoleParams.Emoji)
 	if reactAddErr != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, "Error adding reaction", params.Message.Reference())
+		params.Reply("Error adding reaction")
 		println(reactAddErr.Error())
 		return
 	}
+}
+
+func addRoleSlashCommand() *discordgo.ApplicationCommandOption {
+	return &discordgo.ApplicationCommandOption{
+		Name:        Actions.Add,
+		Description: "Create a new role associated with an emoji.",
+		Type:        discordgo.ApplicationCommandOptionSubCommand,
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "name",
+				Description: "The name of the new role.",
+				Required:    true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "emoji",
+				Description: "The emoji to associate with the new role.",
+				Required:    true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "color",
+				Description: "The color of the new role.",
+				Required:    false,
+			},
+		},
+	}
+}
+
+func handleAddRoleSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	sc := i.ApplicationCommandData().Options[0]
+	roleName := sc.Options[0].StringValue()
+	roleEmoji := sc.Options[1].StringValue()
+	roleColor := ""
+	if len(sc.Options) >= 3 {
+		roleColor = sc.Options[2].StringValue()
+	}
+
+	params := RoleCommandParams{
+		Session:     s,
+		Interaction: i,
+		Rest:        []string{roleName, roleEmoji, roleColor},
+		Client:      client,
+		Action:      Actions.Add,
+	}
+
+	handleAddAction(params)
 }

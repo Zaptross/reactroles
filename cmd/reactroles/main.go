@@ -30,9 +30,20 @@ func main() {
 
 	bot := dgclient.GetClient(discordConfig)
 
+	// message commands
 	bot.Session.AddHandler(bot.GetOnMessageHandler())
+
+	// reactions
 	bot.Session.AddHandler(bot.GetOnReactionAddHandler())
 	bot.Session.AddHandler(bot.GetOnReactionRemoveHandler())
+
+	// slash commands
+	bot.Session.AddHandler(bot.GetOnInteractionHandler())
+	_, err := bot.Session.ApplicationCommandCreate(discordConfig.AppID, "", bot.GetSlashCommand())
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	bot.Connect()
 
