@@ -27,6 +27,8 @@ func (client *DiscordGoClient) GetOnInteractionHandler() func(*discordgo.Session
 			handleRemoveRoleSlashCommand(client, s, i)
 		case Actions.Update:
 			handleUpdateRoleSlashCommand(client, s, i)
+		case Actions.Help:
+			handleHelpSlashCommand(client, s, i)
 		}
 	}
 }
@@ -39,6 +41,7 @@ func (client *DiscordGoClient) GetSlashCommand() *discordgo.ApplicationCommand {
 			addRoleSlashCommand(),
 			removeRoleSlashCommand(),
 			updateRoleSlashCommand(),
+			helpSlashCommand(),
 		},
 	}
 }

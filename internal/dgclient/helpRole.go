@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/samber/lo"
 )
 
 type validHelpParams struct {
@@ -11,11 +14,11 @@ type validHelpParams struct {
 }
 
 func helpRoleHelp() string {
-	return fmt.Sprintf(`Usage: !role help <action>
+	return fmt.Sprintf(`Usage: /role help <action>
 The available actions are: %s
 
 Examples:
-!role help add`,
+/role help add`,
 		strings.Join(Actions.All(), ", "))
 }
 
@@ -48,22 +51,58 @@ func validAction(action string) bool {
 	return false
 }
 
-// !role help <0: action>
+// /role help <0: action>
 func handleHelpAction(params RoleCommandParams) {
 	helpParams, err := validateParamsForHelp(params)
 
 	if err != nil {
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, fmt.Sprintf("⚠ Error: %s\n%s", "No such action exists, available actions are:", strings.Join(Actions.All(), ", ")), params.Message.Reference())
+		params.Reply(fmt.Sprintf("⚠ Error: %s\n%s", "No such action exists, available actions are:", strings.Join(Actions.All(), ", ")))
 	}
 
 	switch helpParams.Action {
 	case Actions.Add:
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, addRoleHelp(), params.Message.Reference())
+		params.Reply(addRoleHelp())
 	case Actions.Update:
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, updateRoleHelp(), params.Message.Reference())
+		params.Reply(updateRoleHelp())
 	case Actions.Remove:
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, removeRoleHelp(), params.Message.Reference())
+		params.Reply(removeRoleHelp())
 	default:
-		params.Session.ChannelMessageSendReply(params.Message.ChannelID, helpRoleHelp(), params.Message.Reference())
+		params.Reply(helpRoleHelp())
 	}
+}
+
+func helpSlashCommand() *discordgo.ApplicationCommandOption {
+	return &discordgo.ApplicationCommandOption{
+		Type:        discordgo.ApplicationCommandOptionSubCommand,
+		Name:        Actions.Help,
+		Description: "Get help for a role command.",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "command",
+				Description: "The command to get help for.",
+				Choices: lo.Map(Actions.All(), func(action string, _ int) *discordgo.ApplicationCommandOptionChoice {
+					return &discordgo.ApplicationCommandOptionChoice{Name: action, Value: action}
+				}),
+			},
+		},
+	}
+}
+
+func handleHelpSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	sc := i.ApplicationCommandData().Options[0]
+	command := ""
+	if len(sc.Options) > 0 {
+		command = sc.Options[0].StringValue()
+	}
+
+	params := RoleCommandParams{
+		Session:     s,
+		Interaction: i,
+		Client:      client,
+		Action:      Actions.Help,
+		Rest:        []string{command},
+	}
+
+	handleHelpAction(params)
 }
