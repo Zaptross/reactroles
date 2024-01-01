@@ -15,11 +15,11 @@ type Selector struct {
 	GuildID   string
 }
 
-func (db *ReactRolesDatabase) SelectorCreate(message *discordgo.Message) *Selector {
+func (db *ReactRolesDatabase) SelectorCreate(message *discordgo.Message, guildId string) *Selector {
 	selector := &Selector{
 		ID:        message.ID,
 		ChannelID: message.ChannelID,
-		GuildID:   message.GuildID,
+		GuildID:   guildId,
 	}
 
 	db.DB.Create(selector)
@@ -27,12 +27,12 @@ func (db *ReactRolesDatabase) SelectorCreate(message *discordgo.Message) *Select
 	return selector
 }
 
-func (db *ReactRolesDatabase) SelectorDelete(message *discordgo.Message) {
-	db.DB.Delete(&Selector{}, "id = ?", message.ID)
+func (db *ReactRolesDatabase) SelectorDelete(message *discordgo.Message, guildId string) {
+	db.DB.Delete(&Selector{}, "id = ? AND guild_id = ?", message.ID, guildId)
 }
 
-func (db *ReactRolesDatabase) SelectorGetAll() []Selector {
+func (db *ReactRolesDatabase) SelectorGetAll(guildId string) []Selector {
 	var selectors []Selector
-	db.DB.Find(&selectors).Order("created_at ASC")
+	db.DB.Where("guild_id = ?", guildId).Find(&selectors).Order("created_at ASC")
 	return selectors
 }

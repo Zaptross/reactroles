@@ -29,7 +29,7 @@ func getConnectionString(params PostgresDbParams) string {
 
 func runAutoMigrations(db *gorm.DB) {
 	// Migrate tables
-	db.AutoMigrate(&Role{}, &Selector{})
+	db.AutoMigrate(&Role{}, &Selector{}, &ServerConfiguration{})
 }
 
 func GetDatabase(params PostgresDbParams) *ReactRolesDatabase {

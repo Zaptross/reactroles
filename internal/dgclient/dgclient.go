@@ -21,12 +21,8 @@ type DiscordGoClientParams struct {
 }
 
 type DiscordGoClient struct {
-	Session          *discordgo.Session
-	selectors        []*discordgo.Message
-	RoleChannel      string
-	roleAddRoleID    string
-	roleRemoveRoleID string
-	db               *pgdb.ReactRolesDatabase
+	Session *discordgo.Session
+	db      *pgdb.ReactRolesDatabase
 }
 
 func GetClient(params DiscordGoClientParams) *DiscordGoClient {
@@ -42,52 +38,14 @@ func GetClient(params DiscordGoClientParams) *DiscordGoClient {
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessageReactions | discordgo.IntentsGuildMessages)
 
 	client := &DiscordGoClient{
-		Session:          dg,
-		RoleChannel:      params.RoleChannel,
-		roleAddRoleID:    params.RoleAddRoleID,
-		roleRemoveRoleID: params.RoleRemoveRoleID,
-		db:               params.DB,
+		Session: dg,
+		db:      params.DB,
 	}
 
 	version, err := getVersionMessageIfPossible()
 
 	if err == nil {
 		log.Printf("[dgclient] Version: %s\n", version)
-	}
-
-	selectors := client.db.SelectorGetAll()
-
-	if params.RoleChannel != "" && len(selectors) == 0 {
-		message, err := dg.ChannelMessageSend(params.RoleChannel, "Setting up role assignment message...")
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		client.db.SelectorCreate(message)
-		client.selectors = []*discordgo.Message{message}
-
-		log.Printf("[dgclient] Role selector created: %s\n", message.ID)
-	}
-
-	if len(selectors) > 0 {
-		client.selectors = make([]*discordgo.Message, len(selectors))
-
-		for i, selector := range selectors {
-			message, err := dg.ChannelMessage(selector.ChannelID, selector.ID)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			client.selectors[i] = message
-		}
-
-		multipleSelectors := ""
-		if len(client.selectors) > 1 {
-			multipleSelectors = "s"
-		}
-		log.Printf("[dgclient] Role selector%s found...\n", multipleSelectors)
 	}
 
 	return client
@@ -99,8 +57,8 @@ func (d *DiscordGoClient) Connect() {
 		log.Fatal(err)
 	}
 
-	log.Println("[dgclient] Connected to Discord, updating role message...")
-	d.updateRoleSelectorMessage()
+	log.Println("[dgclient] Connected to Discord, updating role messages...")
+	d.updateAllRoleSelectorMessages()
 
 	log.Println("[dgclient] Waiting for events...")
 

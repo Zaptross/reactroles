@@ -7,6 +7,7 @@ type Role struct {
 	UpdatedAt time.Time
 	DeletedAt time.Time `gorm:"index"`
 	ID        string    `gorm:"primarykey"`
+	GuildID   string
 	Name      string
 	Emoji     string
 }
@@ -29,44 +30,44 @@ func (db *ReactRolesDatabase) GetRoleByName(name string) Role {
 	return role
 }
 
-func (db *ReactRolesDatabase) RoleAdd(id string, emoji string, name string) {
-	db.DB.Create(&Role{ID: id, Emoji: emoji, Name: name})
+func (db *ReactRolesDatabase) RoleAdd(id string, emoji string, name string, guildId string) {
+	db.DB.Create(&Role{ID: id, Emoji: emoji, Name: name, GuildID: guildId})
 }
 
-func (db *ReactRolesDatabase) RoleUpdate(id string, emoji string, name string) {
-	db.DB.Model(&Role{}).Where("id = ?", id).Updates(Role{Emoji: emoji, Name: name})
+func (db *ReactRolesDatabase) RoleUpdate(id string, emoji string, name string, guildId string) {
+	db.DB.Model(&Role{}).Where("id = ? AND guild_id = ?", id, guildId).Updates(Role{Emoji: emoji, Name: name})
 }
 
-func (db *ReactRolesDatabase) RoleRemove(id string) {
-	db.DB.Delete(&Role{ID: id})
+func (db *ReactRolesDatabase) RoleRemove(id string, guildId string) {
+	db.DB.Delete(&Role{ID: id, GuildID: guildId})
 }
 
-func (db *ReactRolesDatabase) RoleGetById(id string) Role {
+func (db *ReactRolesDatabase) RoleGetById(id string, guildId string) Role {
 	var role Role
-	db.DB.Where("id = ?", id).First(&role)
+	db.DB.Where("id = ? AND guild_id = ?", id, guildId).First(&role)
 	return role
 }
 
-func (db *ReactRolesDatabase) RoleGetAll() []Role {
+func (db *ReactRolesDatabase) RoleGetAll(guildId string) []Role {
 	var roles []Role
-	db.DB.Find(&roles)
+	db.DB.Where("guild_id = ?", guildId).Find(&roles)
 	return roles
 }
 
-func (db *ReactRolesDatabase) RoleIsEmojiTaken(emoji string) bool {
+func (db *ReactRolesDatabase) RoleIsEmojiTaken(emoji string, guildId string) bool {
 	var role Role
-	db.DB.Where("emoji = ?", emoji).First(&role)
+	db.DB.Where("emoji = ? AND guild_id = ?", emoji, guildId).First(&role)
 	return role.ID != ""
 }
 
-func (db *ReactRolesDatabase) RoleIsNameTaken(name string) bool {
+func (db *ReactRolesDatabase) RoleIsNameTaken(name string, guildId string) bool {
 	var role Role
-	db.DB.Where("name = ?", name).First(&role)
+	db.DB.Where("name = ? AND guild_id = ?", name, guildId).First(&role)
 	return role.ID != ""
 }
 
-func (db *ReactRolesDatabase) RoleGetCount() int {
+func (db *ReactRolesDatabase) RoleGetCount(guildId string) int {
 	var count int64
-	db.DB.Model(&Role{}).Count(&count)
+	db.DB.Model(&Role{}).Where("guild_id = ?", guildId).Count(&count)
 	return int(count)
 }

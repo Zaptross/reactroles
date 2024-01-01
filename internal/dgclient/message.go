@@ -17,6 +17,7 @@ func (client *DiscordGoClient) GetOnMessageHandler() func(*discordgo.Session, *d
 		if isRoleCommand(m.Content) {
 			action, rest := splitRoleCommand(m.Content)
 			roleCommandHandler(RoleCommandParams{
+				Server:  client.db.ServerConfigurationGet(m.GuildID),
 				Session: s,
 				Message: m,
 				Client:  client,
@@ -79,7 +80,7 @@ func isRoleCommand(command string) bool {
 }
 
 func roleCommandHandler(params RoleCommandParams) {
-	defer params.Client.updateRoleSelectorMessage()
+	defer params.Client.updateRoleSelectorMessage(params.GuildID())
 
 	switch params.Action {
 	case Actions.Add:
