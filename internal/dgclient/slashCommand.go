@@ -33,6 +33,8 @@ func (client *DiscordGoClient) GetOnInteractionHandler() func(*discordgo.Session
 			handleHelpSlashCommand(client, s, i, server)
 		case ActionConfigure:
 			handleConfigureSlashCommand(client, s, i)
+		case Actions.CreateChannel:
+			handleCreateChannelSlashCommand(client, s, i, server)
 		}
 	}
 }
@@ -47,6 +49,7 @@ func (client *DiscordGoClient) GetSlashCommand() *discordgo.ApplicationCommand {
 			updateRoleSlashCommand(),
 			helpSlashCommand(),
 			configureServerSlashCommand(),
+			createChannelSlashCommand(),
 		},
 	}
 }

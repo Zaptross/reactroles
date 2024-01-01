@@ -5,10 +5,11 @@ import (
 )
 
 type ActionNames struct {
-	Add    string
-	Remove string
-	Update string
-	Help   string
+	Add           string
+	Remove        string
+	Update        string
+	CreateChannel string
+	Help          string
 }
 
 const (
@@ -16,10 +17,11 @@ const (
 )
 
 var Actions = ActionNames{
-	Add:    "add",
-	Update: "update",
-	Remove: "remove",
-	Help:   "help",
+	Add:           "add",
+	Update:        "update",
+	Remove:        "remove",
+	CreateChannel: "create-channel",
+	Help:          "help",
 }
 
 func (a ActionNames) All() []string {

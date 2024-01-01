@@ -10,6 +10,10 @@ type Role struct {
 	GuildID   string
 	Name      string
 	Emoji     string
+
+	// If these are set, these channels require this role to view
+	VoiceChannelID string
+	TextChannelID  string
 }
 
 func (db *ReactRolesDatabase) RoleGetIdByEmoji(emoji string) string {
@@ -36,6 +40,13 @@ func (db *ReactRolesDatabase) RoleAdd(id string, emoji string, name string, guil
 
 func (db *ReactRolesDatabase) RoleUpdate(id string, emoji string, name string, guildId string) {
 	db.DB.Model(&Role{}).Where("id = ? AND guild_id = ?", id, guildId).Updates(Role{Emoji: emoji, Name: name})
+}
+
+func (db *ReactRolesDatabase) RoleUpdateVoiceChannel(id string, voiceChannel string, guildId string) {
+	db.DB.Model(&Role{}).Where("id = ? AND guild_id = ?", id, guildId).Updates(Role{VoiceChannelID: voiceChannel})
+}
+func (db *ReactRolesDatabase) RoleUpdateTextChannel(id string, textChannel string, guildId string) {
+	db.DB.Model(&Role{}).Where("id = ? AND guild_id = ?", id, guildId).Updates(Role{TextChannelID: textChannel})
 }
 
 func (db *ReactRolesDatabase) RoleRemove(id string, guildId string) {
