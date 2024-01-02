@@ -21,6 +21,8 @@ type ServerConfiguration struct {
 
 	//// Channel Creation
 	ChannelCreation      bool
+	ChannelCreateRoleID  string
+	ChannelRemoveRoleID  string
 	ChannelCategoryID    string
 	ChannelCascadeDelete bool
 }
@@ -44,6 +46,8 @@ func (db *ReactRolesDatabase) ServerConfigurationCreate(
 	updateRole string,
 	selectorChannel string,
 	channelCreation bool,
+	channelCreateRoleID string,
+	channelRemoveRoleID string,
 	channelCategoryID string,
 	channelCascadeDelete bool,
 ) *ServerConfiguration {
@@ -54,6 +58,8 @@ func (db *ReactRolesDatabase) ServerConfigurationCreate(
 		RoleUpdateRoleID:     updateRole,
 		SelectorChannelID:    selectorChannel,
 		ChannelCreation:      channelCreation,
+		ChannelCreateRoleID:  channelCreateRoleID,
+		ChannelRemoveRoleID:  channelRemoveRoleID,
 		ChannelCategoryID:    channelCategoryID,
 		ChannelCascadeDelete: channelCascadeDelete,
 	}
@@ -69,6 +75,8 @@ func (db *ReactRolesDatabase) ServerConfigurationUpdate(guildId string,
 	updateRole string,
 	selectorChannel string,
 	channelCreation bool,
+	channelCreateRoleID string,
+	channelRemoveRoleID string,
 	channelCategoryID string,
 	channelCascadeDelete bool,
 ) {
@@ -78,6 +86,8 @@ func (db *ReactRolesDatabase) ServerConfigurationUpdate(guildId string,
 		RoleUpdateRoleID:     updateRole,
 		SelectorChannelID:    selectorChannel,
 		ChannelCreation:      channelCreation,
+		ChannelCreateRoleID:  channelCreateRoleID,
+		ChannelRemoveRoleID:  channelRemoveRoleID,
 		ChannelCategoryID:    channelCategoryID,
 		ChannelCascadeDelete: channelCascadeDelete,
 	})

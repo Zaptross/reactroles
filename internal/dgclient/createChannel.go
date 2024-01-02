@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/samber/lo"
 	"github.com/zaptross/reactroles/internal/pgdb"
 )
 
@@ -104,6 +105,9 @@ func handleCreateChannelSlashCommand(client *DiscordGoClient, s *discordgo.Sessi
 }
 
 func validateCreateChannelCommand(client *DiscordGoClient, guildId string, role *discordgo.Role, category *discordgo.Channel, name string, channelType string, server *pgdb.ServerConfiguration, i *discordgo.InteractionCreate) error {
+	if !lo.Contains(i.Member.Roles, server.ChannelCreateRoleID) {
+		return fmt.Errorf("you do not have permission to create channels for roles")
+	}
 
 	if role == nil {
 		return fmt.Errorf("no such role exists")

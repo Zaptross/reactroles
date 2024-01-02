@@ -18,6 +18,26 @@ If a user has the roles (as configured below) that gives the permission to use r
 - <> : a required parameter
 - [] : an optional parameter
 
+### Configuration
+
+The bot is configured per server via the `configure` command.
+
+To configure the bot, you will need:
+
+- A channel for the bot to post the role selector messages in (e.g. `#roles`)
+- One or more roles to use as permission roles for managing roles (e.g. `@role-add, @role-update, @role-remove`)
+  - These can be the same role if you want to give all permissions to one role
+- Is creating and removing channels enabled? (e.g. `true, false`)
+- What category should the bot create new role channels in? (e.g. `📁 role-channels`)
+  - This is only used if creating and removing channels is enabled
+- One or more roles to use as permission roles for managing role channels (e.g. `@role-channel-create, @role-channel-remove`)
+  - These can be the same as the role management role
+
+#### Example
+
+- `/role configure <role channel> <add role> <remove role> <update role> <create channel> <create channel role> <remove channel role> <channel category> <cascadeDelete>`
+- `/role configure #roles @role-add @role-remove @role-update true  @role-channel-create @role-channel-remove role-channels true`
+
 ### Add Command
 
 Adds a new role to the discord, configured as specified.

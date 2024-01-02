@@ -30,19 +30,29 @@ func configureServerSlashCommand() *discordgo.ApplicationCommandOption {
 			{
 				Type:        discordgo.ApplicationCommandOptionRole,
 				Name:        "remove",
-				Description: "The role which gives permission to remove roles. (Make a new role, or use the same role as the add.)",
+				Description: "The role which gives permission to remove roles. (Make a new role, or use the same role as add.)",
 				Required:    true,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionRole,
 				Name:        "update",
-				Description: "The role which gives permission to update roles. (Make a new role, or use the same role as the add.)",
+				Description: "The role which gives permission to update roles. (Make a new role, or use the same role as add.)",
 				Required:    true,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionBoolean,
 				Name:        "channel-creation",
 				Description: "Is channel creation enabled?",
+				Required:    true,
+			}, {
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Name:        "create-channel",
+				Description: "The role which gives permission to create channels. (Make a new role for this.)",
+				Required:    true,
+			}, {
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Name:        "remove-channel",
+				Description: "The role which gives permission to remove channels. (Make a new role, or use the same as create.)",
 				Required:    true,
 			},
 			{
@@ -77,10 +87,12 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	removeRole := sc.Options[2].RoleValue(s, i.GuildID)
 	updateRole := sc.Options[3].RoleValue(s, i.GuildID)
 	channelCreate := sc.Options[4].BoolValue()
-	channelCategory := sc.Options[5].ChannelValue(s)
-	cascadeDelete := sc.Options[6].BoolValue()
+	channelCreateRole := sc.Options[5].RoleValue(s, i.GuildID)
+	channelRemoveRole := sc.Options[6].RoleValue(s, i.GuildID)
+	channelCategory := sc.Options[7].ChannelValue(s)
+	cascadeDelete := sc.Options[8].BoolValue()
 
-	err := validateServerConfiguration(client.Session, i.GuildID, channel, addRole, removeRole, updateRole, i.User)
+	err := validateServerConfiguration(client.Session, i.GuildID, channel, addRole, removeRole, updateRole, channelCreate, channelCreateRole, channelRemoveRole, cascadeDelete, i.Member)
 
 	if err != nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
@@ -92,35 +104,38 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	oldRoles := []string{}
 
 	if server.GuildID != "" {
-		client.db.ServerConfigurationUpdate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCategory.ID, cascadeDelete)
-		oldRoles = []string{server.SelectorChannelID, server.RoleAddRoleID, server.RoleRemoveRoleID, server.RoleUpdateRoleID}
+		client.db.ServerConfigurationUpdate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCreateRole.ID, channelRemoveRole.ID, channelCategory.ID, cascadeDelete)
+		oldRoles = []string{server.SelectorChannelID, server.RoleAddRoleID, server.RoleRemoveRoleID, server.RoleUpdateRoleID, server.ChannelCreateRoleID, server.ChannelRemoveRoleID}
 	} else {
-		client.db.ServerConfigurationCreate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCategory.ID, cascadeDelete)
+		client.db.ServerConfigurationCreate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCreateRole.ID, channelRemoveRole.ID, channelCategory.ID, cascadeDelete)
 	}
 
 	client.updateRoleSelectorMessage(i.GuildID)
 
 	s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content: fmt.Sprintf(":white_check_mark: React Roles has been %s.", updatedOrConfigured(client.Session, server, channel, []*discordgo.Role{addRole, removeRole, updateRole}, oldRoles, channel.GuildID)),
+		Content: fmt.Sprintf(":white_check_mark: React Roles has been %s.", updatedOrConfigured(client.Session, server, channel, []*discordgo.Role{addRole, removeRole, updateRole, channelCreateRole, channelRemoveRole}, oldRoles, channel.GuildID)),
 	})
 }
 
-func validateServerConfiguration(session *discordgo.Session, guildId string, channel *discordgo.Channel, addRole *discordgo.Role, removeRole *discordgo.Role, updateRole *discordgo.Role, user *discordgo.User) error {
-	member, err := session.State.Member(channel.GuildID, user.ID)
-	if err != nil {
-		return errors.New("member not found")
-	}
-
+func validateServerConfiguration(session *discordgo.Session, guildId string, channel *discordgo.Channel, addRole *discordgo.Role, removeRole *discordgo.Role, updateRole *discordgo.Role, channelCreate bool, channelCreateRole *discordgo.Role, channelRemoveRole *discordgo.Role, cascadeDelete bool, member *discordgo.Member) error {
 	if member.Permissions&discordgo.PermissionManageWebhooks != discordgo.PermissionManageWebhooks {
-		return errors.New("you must have the Manage Webhooks permission to configure React Roles")
+		return errors.New("you must have the Manage Webhooks permission to configure ReactRoles")
 	}
 
 	if channel.Type != discordgo.ChannelTypeGuildText {
 		return errors.New("role channel must be a text channel")
 	}
 
-	if addRole.ID == "" || updateRole.ID == "" || removeRole.ID == "" {
+	if addRole.ID == "" || updateRole.ID == "" || removeRole.ID == "" || channelCreateRole.ID == "" || channelRemoveRole.ID == "" {
 		return errors.New("add-role, remove-role, and update-role are required")
+	}
+
+	if channelCreate && channelCreateRole.ID == "" {
+		return errors.New("create-role is required if channel-creation is enabled")
+	}
+
+	if cascadeDelete && channelRemoveRole.ID == "" {
+		return errors.New("remove-role is required if cascade-delete is enabled")
 	}
 
 	return nil
@@ -135,15 +150,19 @@ func updatedOrConfigured(session *discordgo.Session, server *pgdb.ServerConfigur
 			oldChannelMention = oldChannel.Mention()
 		}
 
-		return fmt.Sprintf("updated from %s, %s, %s, and %s to %s, %s, %s, and %s",
+		return fmt.Sprintf("updated from %s, %s, %s, %s, %s and %s to %s, %s, %s, %s, %s and %s",
 			oldChannelMention,
 			getRoleById(session, oldRoles[0], guildId).Name,
 			getRoleById(session, oldRoles[1], guildId).Name,
 			getRoleById(session, oldRoles[2], guildId).Name,
+			getRoleById(session, oldRoles[3], guildId).Name,
+			getRoleById(session, oldRoles[4], guildId).Name,
 			channel.Mention(),
 			roles[0].Mention(),
 			roles[1].Mention(),
 			roles[2].Mention(),
+			roles[3].Mention(),
+			roles[4].Mention(),
 		)
 	}
 
