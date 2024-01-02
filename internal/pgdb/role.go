@@ -90,3 +90,12 @@ func (db *ReactRolesDatabase) RoleLinkChannel(channelId string, roleId string, g
 		db.DB.Model(&Role{}).Where("id = ? AND guild_id = ?", roleId, guildId).Updates(Role{VoiceChannelID: channelId})
 	}
 }
+
+func (db *ReactRolesDatabase) RoleChannelRemove(roleId string, guildId string, channelType string) {
+	// For some reason, gorm doesn't like to update string fields to empty strings
+	if channelType == "text" {
+		db.DB.Exec("UPDATE roles SET text_channel_id = '' WHERE id = ? AND guild_id = ?", roleId, guildId)
+	} else {
+		db.DB.Exec("UPDATE roles SET voice_channel_id = '' WHERE id = ? AND guild_id = ?", roleId, guildId)
+	}
+}
