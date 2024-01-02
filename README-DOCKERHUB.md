@@ -11,15 +11,17 @@ React Roles is a simple discord bot for allowing self-managing user roles in dis
 
 For the most up-to-date information, check the [Github Repo here](https://github.com/Zaptross/reactroles#react-roles)!
 
-The commands are called by sending messages structured like the following:
+The commands are executed by using slash commands as follows:
 
 - `/role add <role name> <emoji> [colour]`
-- `/role remove <role name>`
-- `/role update <role name> <role field> <role field value>`
+- `/role remove <role>`
+- `/role update <role> <role field> <role field value>`
+- `/role create-channel <role> <channel name> <channel type>`
+- `/role link-channel <role> <channel>`
 - `/role help <command name>`
 
 If unsuccessful, the bot will reply with an error message and usage.
 
-## Setup
+## Configuration & Setup
 
-For setup instructions, please see the [Github Repo here](https://github.com/Zaptross/reactroles#react-roles)
+For configuration and setup instructions, please see the [Github Repo here](https://github.com/Zaptross/reactroles#react-roles)

@@ -51,26 +51,50 @@ Usage examples:
 
 ### Remove Command
 
-Removes a role and it's reacions from the discord.
+Removes a role, its reactions, and its channels if they exist.
 
-- `/role remove <role name>`
+- `/role remove <role>`
 
 Usage example:
 
-- `/role remove valorant`
+- `/role remove @valorant`
 
 ### Update Command
 
 Modifies any one part of a role.
 Where role fields are `name`, `emoji` and `color`, and role field values are valid values of those fields as per the `add` role command.
 
-- `/role update <role name> <role field> <role field value>`
+- `/role update <role> <role field> <role field value>`
 
 Usage examples:
 
-- `/role update valorant name coolgungame`
-- `/role update valorant emoji 😎`
-- `/role update valorant color #CADEAA`
+- `/role update @valorant name coolgungame`
+- `/role update @valorant emoji 😎`
+- `/role update @valorant color #CADEAA`
+
+### Create Channel Command
+
+Creates a new channel with the specified name, and adds the specified role to the channel.
+Roles may have zero or one text channel, and zero or one voice channel associated with them.
+
+- `/role create-channel <role> <channel name> <channel type>`
+
+Usage examples:
+
+- `/role create-channel @valorant valorant-chat text`
+- `/role create-channel @valorant valorant-voice voice`
+
+### Link Channel Command
+
+Links an existing channel to a role.
+Roles may have zero or one text channel, and zero or one voice channel associated with them.
+
+- `/role link-channel <role> <channel>`
+
+Usage examples:
+
+- `/role link-channel @valorant #valorant-chat`
+- `/role link-channel @valorant 🔊valorant-voice`
 
 ### Help Command
 
@@ -81,10 +105,6 @@ Replies to the user the help text accompanying the command.
 Usage example:
 
 - `/role help add`
-
-As of v2.6.0 (3ee3b59)
-
-If unsuccessful, the bot will reply with an error message and usage.
 
 # Setup
 
