@@ -9,6 +9,7 @@ type ActionNames struct {
 	Remove        string
 	Update        string
 	CreateChannel string
+	LinkChannel   string
 	Help          string
 }
 
@@ -21,6 +22,7 @@ var Actions = ActionNames{
 	Update:        "update",
 	Remove:        "remove",
 	CreateChannel: "create-channel",
+	LinkChannel:   "link-channel",
 	Help:          "help",
 }
 

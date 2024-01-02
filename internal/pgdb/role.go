@@ -82,3 +82,11 @@ func (db *ReactRolesDatabase) RoleGetCount(guildId string) int {
 	db.DB.Model(&Role{}).Where("guild_id = ?", guildId).Count(&count)
 	return int(count)
 }
+
+func (db *ReactRolesDatabase) RoleLinkChannel(channelId string, roleId string, guildId string, channelType string) {
+	if channelType == "text" {
+		db.DB.Model(&Role{}).Where("id = ? AND guild_id = ?", roleId, guildId).Updates(Role{TextChannelID: channelId})
+	} else {
+		db.DB.Model(&Role{}).Where("id = ? AND guild_id = ?", roleId, guildId).Updates(Role{VoiceChannelID: channelId})
+	}
+}
