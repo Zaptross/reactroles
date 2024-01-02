@@ -6,6 +6,9 @@ data:
   {{- range $key, $val := .Values.reactroles.discord }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
+  {{- range $key, $val := .Values.reactroles.reactroles }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
   {{- range $key, $val := .Values.reactroles.postgres }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
