@@ -11,13 +11,9 @@ import (
 )
 
 type DiscordGoClientParams struct {
-	Token            string
-	RoleMessage      string
-	RoleChannel      string
-	RoleAddRoleID    string
-	RoleRemoveRoleID string
-	AppID            string
-	DB               *pgdb.ReactRolesDatabase `ignored:"true"`
+	Token string
+	AppID string
+	DB    *pgdb.ReactRolesDatabase `ignored:"true"`
 }
 
 type DiscordGoClient struct {
@@ -26,10 +22,6 @@ type DiscordGoClient struct {
 }
 
 func GetClient(params DiscordGoClientParams) *DiscordGoClient {
-	if params.RoleChannel == "" {
-		log.Fatal("Role channel not set in client params")
-	}
-
 	dg, err := discordgo.New("Bot " + params.Token)
 	if err != nil {
 		log.Fatal(err)
