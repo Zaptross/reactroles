@@ -96,6 +96,16 @@ Usage examples:
 - `/role link-channel @valorant #valorant-chat`
 - `/role link-channel @valorant 🔊valorant-voice`
 
+### Remove Channel Command
+
+Removes a channel from a role, and deletes the channel.
+
+- `/role remove-channel <role> <channel>`
+
+Usage examples:
+
+- `/role remove-channel @valorant #valorant-chat`
+
 ### Help Command
 
 Replies to the user the help text accompanying the command.

@@ -18,6 +18,7 @@ The commands are executed by using slash commands as follows:
 - `/role update <role> <role field> <role field value>`
 - `/role create-channel <role> <channel name> <channel type>`
 - `/role link-channel <role> <channel>`
+- `/role remove-channel <role> <channel>`
 - `/role help <command name>`
 
 If unsuccessful, the bot will reply with an error message and usage.
