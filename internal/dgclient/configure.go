@@ -92,20 +92,20 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	channelCategory := sc.Options[7].ChannelValue(s)
 	cascadeDelete := sc.Options[8].BoolValue()
 
-	err := validateServerConfiguration(client.Session, i.GuildID, channel, addRole, removeRole, updateRole, channelCreate, channelCreateRole, channelRemoveRole, cascadeDelete, i.Member)
+	err := validateServerConfiguration(client, i.GuildID, channel, addRole, removeRole, updateRole, channelCreate, channelCreateRole, channelRemoveRole, cascadeDelete, i.Member)
 
 	if err != nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Content: fmt.Sprintf("Error configuring server: %s", err.Error()),
 		})
+		return
 	}
 
-	server := client.db.ServerConfigurationGet(i.GuildID)
-	oldRoles := []string{}
+	serverConfig := client.db.ServerConfigurationGet(i.GuildID)
+	oldConfig := serverConfig.Clone()
 
-	if server.GuildID != "" {
-		client.db.ServerConfigurationUpdate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCreateRole.ID, channelRemoveRole.ID, channelCategory.ID, cascadeDelete)
-		oldRoles = []string{server.SelectorChannelID, server.RoleAddRoleID, server.RoleRemoveRoleID, server.RoleUpdateRoleID, server.ChannelCreateRoleID, server.ChannelRemoveRoleID}
+	if serverConfig.GuildID != "" {
+		serverConfig = client.db.ServerConfigurationUpdate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCreateRole.ID, channelRemoveRole.ID, channelCategory.ID, cascadeDelete)
 	} else {
 		client.db.ServerConfigurationCreate(i.GuildID, addRole.ID, removeRole.ID, updateRole.ID, channel.ID, channelCreate, channelCreateRole.ID, channelRemoveRole.ID, channelCategory.ID, cascadeDelete)
 	}
@@ -113,11 +113,11 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	client.updateRoleSelectorMessage(i.GuildID)
 
 	s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content: fmt.Sprintf(":white_check_mark: React Roles has been %s.", updatedOrConfigured(client.Session, server, channel, []*discordgo.Role{addRole, removeRole, updateRole, channelCreateRole, channelRemoveRole}, oldRoles, channel.GuildID)),
+		Content: fmt.Sprintf(":white_check_mark: React Roles has %s.", updatedOrConfigured(client.Session, serverConfig, oldConfig)),
 	})
 }
 
-func validateServerConfiguration(session *discordgo.Session, guildId string, channel *discordgo.Channel, addRole *discordgo.Role, removeRole *discordgo.Role, updateRole *discordgo.Role, channelCreate bool, channelCreateRole *discordgo.Role, channelRemoveRole *discordgo.Role, cascadeDelete bool, member *discordgo.Member) error {
+func validateServerConfiguration(client *DiscordGoClient, guildId string, channel *discordgo.Channel, addRole *discordgo.Role, removeRole *discordgo.Role, updateRole *discordgo.Role, channelCreate bool, channelCreateRole *discordgo.Role, channelRemoveRole *discordgo.Role, cascadeDelete bool, member *discordgo.Member) error {
 	if member.Permissions&discordgo.PermissionManageWebhooks != discordgo.PermissionManageWebhooks {
 		return errors.New("you must have the Manage Webhooks permission to configure ReactRoles")
 	}
@@ -138,51 +138,20 @@ func validateServerConfiguration(session *discordgo.Session, guildId string, cha
 		return errors.New("remove-role is required if cascade-delete is enabled")
 	}
 
-	return nil
-}
-
-func updatedOrConfigured(session *discordgo.Session, server *pgdb.ServerConfiguration, channel *discordgo.Channel, roles []*discordgo.Role, oldRoles []string, guildId string) string {
-	if server.GuildID != "" {
-		oldChannel, err := session.Channel(server.SelectorChannelID)
-
-		oldChannelMention := server.SelectorChannelID
-		if err == nil {
-			oldChannelMention = oldChannel.Mention()
-		}
-
-		return fmt.Sprintf("updated from %s, %s, %s, %s, %s and %s to %s, %s, %s, %s, %s and %s",
-			oldChannelMention,
-			getRoleById(session, oldRoles[0], guildId).Name,
-			getRoleById(session, oldRoles[1], guildId).Name,
-			getRoleById(session, oldRoles[2], guildId).Name,
-			getRoleById(session, oldRoles[3], guildId).Name,
-			getRoleById(session, oldRoles[4], guildId).Name,
-			channel.Mention(),
-			roles[0].Mention(),
-			roles[1].Mention(),
-			roles[2].Mention(),
-			roles[3].Mention(),
-			roles[4].Mention(),
-		)
-	}
-
-	return "configured for this server"
-}
-
-func getRoleById(s *discordgo.Session, roleId string, guildId string) *discordgo.Role {
-	guild, success := lo.Find(s.State.Guilds, func(guild *discordgo.Guild) bool {
-		return guild.ID == guildId
-	})
-
-	if !success {
-		return nil
-	}
-
-	for _, role := range guild.Roles {
-		if role.ID == roleId {
-			return role
+	managedRoles := lo.Map(client.db.RoleGetAll(guildId), func(i pgdb.Role, _ int) string { return i.ID })
+	for _, role := range []*discordgo.Role{addRole, removeRole, updateRole, channelCreateRole, channelRemoveRole} {
+		if lo.Contains(managedRoles, role.ID) {
+			return fmt.Errorf("%s is managed by ReactRoles\n Permission roles may not be managed by ReactRoles", role.Mention())
 		}
 	}
 
 	return nil
+}
+
+func updatedOrConfigured(session *discordgo.Session, serverConfig *pgdb.ServerConfiguration, oldConfig *pgdb.ServerConfiguration) string {
+	if oldConfig.GuildID != "" {
+		return oldConfig.Diff(serverConfig)
+	}
+
+	return "been configured for this server"
 }

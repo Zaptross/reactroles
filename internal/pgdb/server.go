@@ -1,6 +1,12 @@
 package pgdb
 
-import "time"
+import (
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+)
 
 type ServerConfiguration struct {
 	CreatedAt time.Time
@@ -79,8 +85,9 @@ func (db *ReactRolesDatabase) ServerConfigurationUpdate(guildId string,
 	channelRemoveRoleID string,
 	channelCategoryID string,
 	channelCascadeDelete bool,
-) {
-	db.DB.Model(&ServerConfiguration{}).Where("guild_id = ?", guildId).Updates(ServerConfiguration{
+) *ServerConfiguration {
+	config := &ServerConfiguration{GuildID: guildId}
+	db.DB.Model(config).Where("guild_id = ?", guildId).Updates(ServerConfiguration{
 		RoleAddRoleID:        addRole,
 		RoleRemoveRoleID:     removeRole,
 		RoleUpdateRoleID:     updateRole,
@@ -91,4 +98,49 @@ func (db *ReactRolesDatabase) ServerConfigurationUpdate(guildId string,
 		ChannelCategoryID:    channelCategoryID,
 		ChannelCascadeDelete: channelCascadeDelete,
 	})
+
+	return config
+}
+
+func (sc *ServerConfiguration) Diff(other *ServerConfiguration) string {
+	out := []string{}
+
+	for _, field := range reflect.VisibleFields(reflect.TypeOf(*sc)) {
+		if field.Type == reflect.TypeOf(time.Time{}) {
+			continue
+		}
+
+		thisField := reflect.ValueOf(*sc).FieldByName(field.Name).String()
+		otherField := reflect.ValueOf(*other).FieldByName(field.Name).String()
+
+		if field.Type == reflect.TypeOf(true) {
+			thisField = strconv.FormatBool(reflect.ValueOf(*sc).FieldByName(field.Name).Bool())
+			otherField = strconv.FormatBool(reflect.ValueOf(*other).FieldByName(field.Name).Bool())
+		}
+
+		if thisField != otherField {
+			out = append(out, fmt.Sprintf("%s: %s -> %s", field.Name, thisField, otherField))
+		}
+	}
+
+	if len(out) == 0 {
+		return "updated configuration: no changes"
+	}
+
+	return fmt.Sprintf("updated configuration:\n%s", strings.Join(out, "\n"))
+}
+
+func (sc *ServerConfiguration) Clone() *ServerConfiguration {
+	return &ServerConfiguration{
+		GuildID:              sc.GuildID,
+		RoleAddRoleID:        sc.RoleAddRoleID,
+		RoleRemoveRoleID:     sc.RoleRemoveRoleID,
+		RoleUpdateRoleID:     sc.RoleUpdateRoleID,
+		SelectorChannelID:    sc.SelectorChannelID,
+		ChannelCreation:      sc.ChannelCreation,
+		ChannelCreateRoleID:  sc.ChannelCreateRoleID,
+		ChannelRemoveRoleID:  sc.ChannelRemoveRoleID,
+		ChannelCategoryID:    sc.ChannelCategoryID,
+		ChannelCascadeDelete: sc.ChannelCascadeDelete,
+	}
 }
