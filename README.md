@@ -121,7 +121,7 @@ Usage example:
 Before deploying your own, you will need to make a discord bot, and add it to your server.
 
 - Discord application creation: https://discord.com/developers/applications
-- Discord oauth2 link generator(with correct permissions preconfigured): https://discordapi.com/permissions.html#2415995968
+- Discord oauth2 link generator(with correct permissions preconfigured): https://discordapi.com/permissions.html#2415995984
 
 ## Docker
 
