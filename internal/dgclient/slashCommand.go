@@ -6,11 +6,12 @@ import (
 
 func (client *DiscordGoClient) GetOnInteractionHandler() func(*discordgo.Session, *discordgo.InteractionCreate) {
 	return func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		working := ":gear: Working..."
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: ":gear: Working...",
-				Flags:   uint64(discordgo.MessageFlagsEphemeral),
+				Content: working,
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 

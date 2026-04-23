@@ -45,16 +45,18 @@ func handleRemoveChannelSlashCommand(client *DiscordGoClient, s *discordgo.Sessi
 
 	err := validateRemoveChannelCommand(client, i.GuildID, channel, role, server, i, channelType)
 	if err != nil {
+		msg := err.Error()
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: err.Error(),
+			Content: &msg,
 		})
 		return
 	}
 
 	_, err = s.ChannelDelete(channel.ID)
 	if err != nil {
+		m := "Error: failed to delete channel"
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: "Error: failed to delete channel",
+			Content: &m,
 		})
 		println(err.Error())
 		return
@@ -62,9 +64,10 @@ func handleRemoveChannelSlashCommand(client *DiscordGoClient, s *discordgo.Sessi
 
 	client.db.RoleChannelRemove(role.ID, i.GuildID, channelType)
 
-	s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content: fmt.Sprintf("Channel %s removed for role %s", channel.Name, role.Name),
-	})
+		msg := fmt.Sprintf("Channel %s removed for role %s", channel.Name, role.Name)
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: &msg,
+		})
 }
 
 func validateRemoveChannelCommand(client *DiscordGoClient, guildID string, channel *discordgo.Channel, role *discordgo.Role, server *pgdb.ServerConfiguration, i *discordgo.InteractionCreate, channelType string) error {

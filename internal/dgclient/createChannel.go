@@ -48,16 +48,18 @@ func handleCreateChannelSlashCommand(client *DiscordGoClient, s *discordgo.Sessi
 
 	category, err := client.Session.Channel(server.ChannelCategoryID)
 	if err != nil {
+		msg := fmt.Sprintf("Error getting category: %s", err.Error())
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: fmt.Sprintf("Error getting category: %s", err.Error()),
+			Content: &msg,
 		})
 		return
 	}
 
 	err = validateCreateChannelCommand(client, i.GuildID, role, category, name, channelType, server, i)
 	if err != nil {
+		msg := fmt.Sprintf("Error: %s", err.Error())
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: fmt.Sprintf("Error: %s", err.Error()),
+			Content: &msg,
 		})
 		return
 	}
@@ -87,15 +89,17 @@ func handleCreateChannelSlashCommand(client *DiscordGoClient, s *discordgo.Sessi
 	})
 
 	if err != nil {
+		msg := fmt.Sprintf("Error creating channel: %s", err.Error())
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: fmt.Sprintf("Error creating channel: %s", err.Error()),
+			Content: &msg,
 		})
 		return
 	}
 
-	s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content: fmt.Sprintf("Channel %s created for role %s in category %s", createdChannel.Mention(), role.Mention(), category.Mention()),
-	})
+		msg := fmt.Sprintf("Channel %s created for role %s in category %s", createdChannel.Mention(), role.Mention(), category.Mention())
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: &msg,
+		})
 
 	if channelType == "text" {
 		client.db.RoleUpdateTextChannel(role.ID, createdChannel.ID, i.GuildID)

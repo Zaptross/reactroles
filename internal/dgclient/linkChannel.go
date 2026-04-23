@@ -45,8 +45,9 @@ func handleLinkChannelSlashCommand(client *DiscordGoClient, s *discordgo.Session
 
 	err := validateLinkChannelCommand(client, i.GuildID, channel, role, server, i, channelType)
 	if err != nil {
+		msg := fmt.Sprintf("Error: %s", err.Error())
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: fmt.Sprintf("Error: %s", err.Error()),
+			Content: &msg,
 		})
 		return
 	}
@@ -82,10 +83,11 @@ func handleLinkChannelSlashCommand(client *DiscordGoClient, s *discordgo.Session
 			PermissionOverwrites: append(channel.PermissionOverwrites, requiredOverrides...),
 		})
 
-		if err != nil {
-			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Content: "Error: failed to update permissions for channel",
-			})
+			if err != nil {
+				m := "Error: failed to update permissions for channel"
+				s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+					Content: &m,
+				})
 			println(err.Error())
 			return
 		}
@@ -93,9 +95,10 @@ func handleLinkChannelSlashCommand(client *DiscordGoClient, s *discordgo.Session
 
 	client.db.RoleLinkChannel(channel.ID, role.ID, i.GuildID, channelType)
 
-	s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content: fmt.Sprintf("Channel %s linked to role %s.", channel.Mention(), role.Mention()),
-	})
+		msg := fmt.Sprintf("Channel %s linked to role %s.", channel.Mention(), role.Mention())
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: &msg,
+		})
 }
 
 func validateLinkChannelCommand(client *DiscordGoClient, guildId string, channel *discordgo.Channel, role *discordgo.Role, server *pgdb.ServerConfiguration, i *discordgo.InteractionCreate, channelType string) error {
