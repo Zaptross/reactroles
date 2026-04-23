@@ -69,18 +69,19 @@ func handleAddAction(params RoleCommandParams) {
 		return
 	}
 
-	role, roleCreateErr := params.Session.GuildRoleCreate(params.GuildID())
+	hoist := false
+	mentionable := true
+
+	role, roleCreateErr := params.Session.GuildRoleCreate(params.GuildID(), &discordgo.RoleParams{
+		Name:        addRoleParams.Name,
+		Color:       &addRoleParams.Color,
+		Hoist:       &hoist,
+		Mentionable: &mentionable,
+	})
 
 	if roleCreateErr != nil {
 		params.Reply("Error creating role")
 		println(roleCreateErr.Error())
-		return
-	}
-
-	_, editErr := params.Session.GuildRoleEdit(params.GuildID(), role.ID, addRoleParams.Name, addRoleParams.Color, false, 0, true)
-	if editErr != nil {
-		params.Reply("Error editing role")
-		println(editErr.Error())
 		return
 	}
 

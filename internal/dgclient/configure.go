@@ -73,11 +73,12 @@ func configureServerSlashCommand() *discordgo.ApplicationCommandOption {
 }
 
 func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	working := ":gear: Working..."
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: ":gear: Working...",
-			Flags:   uint64(discordgo.MessageFlagsEphemeral),
+			Content: working,
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 
@@ -95,8 +96,9 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 	err := validateServerConfiguration(client, i.GuildID, channel, addRole, removeRole, updateRole, channelCreate, channelCreateRole, channelRemoveRole, cascadeDelete, i.Member)
 
 	if err != nil {
+		m := fmt.Sprintf("Error configuring server: %s", err.Error())
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: fmt.Sprintf("Error configuring server: %s", err.Error()),
+			Content: &m,
 		})
 		return
 	}
@@ -112,8 +114,9 @@ func handleConfigureSlashCommand(client *DiscordGoClient, s *discordgo.Session, 
 
 	client.updateRoleSelectorMessage(i.GuildID)
 
+	done := fmt.Sprintf(":white_check_mark: React Roles has %s.", updatedOrConfigured(client.Session, serverConfig, oldConfig))
 	s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content: fmt.Sprintf(":white_check_mark: React Roles has %s.", updatedOrConfigured(client.Session, serverConfig, oldConfig)),
+		Content: &done,
 	})
 }
 

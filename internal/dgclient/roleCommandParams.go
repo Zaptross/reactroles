@@ -41,8 +41,9 @@ func (rc *RoleCommandParams) AuthorID() string {
 
 func (rcp *RoleCommandParams) Reply(message string) {
 	if rcp.Interaction != nil {
+		m := message
 		rcp.Session.InteractionResponseEdit(rcp.Interaction.Interaction, &discordgo.WebhookEdit{
-			Content: message,
+			Content: &m,
 		})
 	} else {
 		rcp.Session.ChannelMessageSend(rcp.ChannelID(), message)
