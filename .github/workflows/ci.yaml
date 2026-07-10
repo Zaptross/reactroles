@@ -69,6 +69,7 @@ jobs:
       - test
       - prepare
     uses: ./.github/workflows/container-build.yaml
+    secrets: inherit
     with:
       registry_host: docker.io
       registry_image: docker.io/zaptross/reactroles
