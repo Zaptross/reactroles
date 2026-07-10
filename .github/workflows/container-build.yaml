@@ -56,7 +56,6 @@ on:
 
 jobs:
   build:
-    environment: ${{ inputs.push_environment }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -116,6 +115,7 @@ jobs:
   merge:
     if: ${{ inputs.push }}
     needs: build
+    environment: ${{ inputs.push_environment }}
     runs-on: ubuntu-latest
 
     steps:

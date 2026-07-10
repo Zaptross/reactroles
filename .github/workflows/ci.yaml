@@ -59,7 +59,7 @@ jobs:
           tag_prefix: "v"
           major_pattern: /!/
           minor_pattern: /feat|refactor|revert|style/
-          format: "${major}.${minor}.${patch}"
+          version_format: "${major}.${minor}.${patch}"
           bump_each_commit: true
 
   # ── Container build (parallel per-arch) ────────────────────
