@@ -135,6 +135,6 @@ You can check out the image versions over on [Docker Hub](https://hub.docker.com
 ## Kubernetes
 
 1. Clone the repo to your machine
-2. Duplicate `./cmd/reactroles/kube/deployment.yaml` and rename it to `deployment.prod.yaml`
+2. Duplicate `./kube/deployment.yaml` and rename it to `deployment.prod.yaml`
 3. Fill out the data variables in the config map
-4. In a terminal in the repo root, run `kubectl apply -f ./cmd/reactroles/kube/deployment.prod.yaml`
+4. In a terminal in the repo root, run `kubectl apply -f ./kube/deployment.prod.yaml`

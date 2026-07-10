@@ -18,5 +18,5 @@ spec:
           image: "{{ .Values.image.repository }}:{{.Values.image.tag | default .Chart.AppVersion }}"
           resources: {{- toYaml .Values.resources | nindent 12}}
           envFrom:
-            - configMapRef:
+            - secretRef:
                 name: {{include "reactroles.fullname" .}}

@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+      - "*/*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # ── Go checks ──────────────────────────────────────────────
+  vet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+
+      - name: Vet
+        run: go vet ./...
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+
+      - name: Test
+        run: go test ./...
+
+  # ── Version ────────────────────────────────────────────────
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      sha_short: ${{ steps.get_sha.outputs.sha_short }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set outputs
+        id: get_sha
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - uses: paulhatch/semantic-version@v5.4.0
+        id: get_version
+        with:
+          tag_prefix: "v"
+          major_pattern: /!/
+          minor_pattern: /feat|refactor|revert|style/
+          format: "${major}.${minor}.${patch}"
+          bump_each_commit: true
+
+  # ── Container build (parallel per-arch) ────────────────────
+  container-build:
+    needs:
+      - vet
+      - test
+      - prepare
+    uses: ./.github/workflows/container-build.yaml
+    with:
+      registry_host: docker.io
+      registry_image: docker.io/zaptross/reactroles
+      registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      platforms: '["linux/amd64", "linux/arm64", "linux/arm/v7"]'
+      push: ${{ github.ref == 'refs/heads/main' }}
+      push_environment: ${{ github.ref == 'refs/heads/main' && 'Image Push' || '' }}
+      build_args: |
+        version="${{ needs.prepare.outputs.version }} \(${{ needs.prepare.outputs.sha_short }}\)"
+      tags: |
+        latest
+        ${{ needs.prepare.outputs.sha_short }}
+        ${{ github.sha }}
+        ${{ needs.prepare.outputs.version }}
+
+  # ── Tag release ────────────────────────────────────────────
+  tag:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      - prepare
+      - container-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Tag Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ needs.prepare.outputs.version }}',
+              sha: context.sha
+            })
+
+  # ── Status gate (use this as the required check) ──────────
+  ci:
+    if: ${{ always() }}
+    needs:
+      - vet
+      - test
+      - container-build
+      - tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          results=( "${{ needs.vet.result }}" "${{ needs.test.result }}" "${{ needs.container-build.result }}" "${{ needs.tag.result }}" )
+          for r in "${results[@]}"; do
+            if [[ "$r" != "success" && "$r" != "skipped" ]]; then
+              echo "Job failed with result: $r"
+              exit 1
+            fi
+          done
