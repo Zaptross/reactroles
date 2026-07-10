@@ -69,6 +69,7 @@ jobs:
       - test
       - prepare
     uses: ./.github/workflows/container-build.yaml
+    environment: Image Build
     with:
       registry_host: docker.io
       registry_image: docker.io/zaptross/reactroles
