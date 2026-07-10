@@ -1,13 +1,16 @@
 package dgclient
 
 import (
+	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/zaptross/reactroles/internal/pgdb"
+	"github.com/zaptross/reactroles/internal/utils"
 )
 
 type DiscordGoClientParams struct {
@@ -34,7 +37,8 @@ func GetClient(params DiscordGoClientParams) *DiscordGoClient {
 		db:      params.DB,
 	}
 
-	version, err := getVersionMessageIfPossible()
+	s, c := utils.GetVersionRaw()
+	version := fmt.Sprintf("%s (%s)", s, c)
 
 	if err == nil {
 		log.Printf("[dgclient] Version: %s\n", version)
@@ -53,6 +57,10 @@ func (d *DiscordGoClient) Connect() {
 	d.updateAllRoleSelectorMessages()
 
 	log.Println("[dgclient] Waiting for events...")
+
+	s, c := utils.GetVersionRaw()
+	slog.Info("reactroles started successfully", "semantic", s, "commit", c)
+	d.Session.UpdateCustomStatus(fmt.Sprintf("Version: %s (%s)", s, c))
 
 	// Wait here until CTRL-C or other term signal is received.
 	sc := make(chan os.Signal, 1)

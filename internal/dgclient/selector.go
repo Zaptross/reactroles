@@ -10,6 +10,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/zaptross/reactroles/internal/pgdb"
+	"github.com/zaptross/reactroles/internal/utils"
 )
 
 const (
@@ -37,11 +38,8 @@ func (client *DiscordGoClient) updateRoleSelectorMessage(guildId string) {
 		"**Roles**",
 	}
 
-	ver, err := getVersionMessageIfPossible()
-
-	if err == nil {
-		roleLines = append([]string{ver}, roleLines...)
-	}
+	s, c := utils.GetVersionRaw()
+	roleLines = append([]string{fmt.Sprintf("%s (%s)", s, c)}, roleLines...)
 
 	selectors := lookupMessagesForSelectors(client, client.db.SelectorGetAll(guildId))
 
@@ -115,16 +113,6 @@ func (client *DiscordGoClient) updateRoleSelectorMessage(guildId string) {
 
 		roleLines = []string{}
 	}
-}
-
-func getVersionMessageIfPossible() (string, error) {
-	dat, err := os.ReadFile("/etc/program-version")
-
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("V %s", string(dat)), nil
 }
 
 func findSelectorForRole(selectors []*discordgo.Message, role pgdb.Role) (*discordgo.Message, error) {
