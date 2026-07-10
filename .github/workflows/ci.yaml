@@ -59,7 +59,7 @@ jobs:
           tag_prefix: "v"
           major_pattern: /!/
           minor_pattern: /feat|refactor|revert|style/
-          format: "${major}.${minor}.${patch}"
+          version_format: "${major}.${minor}.${patch}"
           bump_each_commit: true
 
   # ── Container build (parallel per-arch) ────────────────────
@@ -69,15 +69,15 @@ jobs:
       - test
       - prepare
     uses: ./.github/workflows/container-build.yaml
-    environment: Image Build
+    secrets:
+      registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       registry_host: docker.io
       registry_image: docker.io/zaptross/reactroles
-      registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
-      registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
       platforms: '["linux/amd64", "linux/arm64", "linux/arm/v7"]'
       push: ${{ github.ref == 'refs/heads/main' }}
-      push_environment: ${{ github.ref == 'refs/heads/main' && 'Image Push' || '' }}
+      push_environment: ${{ github.ref == 'refs/heads/main' && 'Image Build' || '' }}
       build_args: |
         version="${{ needs.prepare.outputs.version }} \(${{ needs.prepare.outputs.sha_short }}\)"
       tags: |
