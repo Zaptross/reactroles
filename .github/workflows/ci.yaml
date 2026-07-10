@@ -69,7 +69,6 @@ jobs:
       - test
       - prepare
     uses: ./.github/workflows/container-build.yaml
-    environment: Image Build
     with:
       registry_host: docker.io
       registry_image: docker.io/zaptross/reactroles
@@ -77,7 +76,7 @@ jobs:
       registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
       platforms: '["linux/amd64", "linux/arm64", "linux/arm/v7"]'
       push: ${{ github.ref == 'refs/heads/main' }}
-      push_environment: ${{ github.ref == 'refs/heads/main' && 'Image Push' || '' }}
+      push_environment: ${{ github.ref == 'refs/heads/main' && 'Image Build' || '' }}
       build_args: |
         version="${{ needs.prepare.outputs.version }} \(${{ needs.prepare.outputs.sha_short }}\)"
       tags: |
