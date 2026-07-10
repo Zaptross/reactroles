@@ -88,12 +88,7 @@ func handleAddAction(params RoleCommandParams) {
 	params.Client.db.RoleAdd(role.ID, addRoleParams.Emoji, addRoleParams.Name, params.GuildID())
 	params.Reply(fmt.Sprintf("Role %s %s added", role.Mention(), addRoleParams.Emoji))
 
-	rolesCount := params.Client.db.RoleGetCount(params.GuildID())
-
-	if rolesCount%ROLES_PER_SELECTOR > 0 {
-		// update selectors early if we need a new one
-		params.Client.updateRoleSelectorMessage(params.GuildID())
-	}
+	params.Client.updateRoleSelectorMessage(params.GuildID())
 
 	selectors := params.Client.db.SelectorGetAll(params.GuildID())
 	lastSelectorId := selectors[len(selectors)-1].ID

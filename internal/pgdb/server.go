@@ -14,23 +14,31 @@ type ServerConfiguration struct {
 	DeletedAt time.Time
 	GuildID   string `gorm:"primarykey"`
 
-	// Permissions
-	// These are the role IDs that the bot will use to determine if a user has
-	// permission to perform certain actions.
-	RoleAddRoleID    string
-	RoleRemoveRoleID string
-	RoleUpdateRoleID string
-
-	//// Selectors
+	// Whether Channel Creation is enabled.
+	ChannelCreation bool
 	// The channel ID where the bot will listen for role reactions and send role
 	SelectorChannelID string
-
-	//// Channel Creation
-	ChannelCreation      bool
-	ChannelCreateRoleID  string
-	ChannelRemoveRoleID  string
-	ChannelCategoryID    string
+	// The category ID where the bot will create channels for roles.
+	ChannelCategoryID string
+	// Whether to delete channels when a role is removed.
 	ChannelCascadeDelete bool
+	// Notify role ID is the role ID that will be notified when a new role is added.
+	NotifyRoleID string
+
+	/// Permissions
+	/// These are the role IDs that the bot will use to determine if a user has
+	/// permission to perform certain actions.
+
+	// RoleAddRoleID is the role ID that allows a user to add roles to themselves.
+	RoleAddRoleID string
+	// RoleRemoveRoleID is the role ID that allows a user to remove roles from themselves.
+	RoleRemoveRoleID string
+	// RoleUpdateRoleID is the role ID that allows a user to update roles for themselves.
+	RoleUpdateRoleID string
+	// The role ID that allows a user to create channels for roles.
+	ChannelCreateRoleID string
+	// The role ID that allows a user to remove channels for roles.
+	ChannelRemoveRoleID string
 }
 
 func (db *ReactRolesDatabase) GetAllServerConfigurations() []ServerConfiguration {
@@ -54,6 +62,7 @@ func (db *ReactRolesDatabase) ServerConfigurationCreate(
 	channelCreation bool,
 	channelCreateRoleID string,
 	channelRemoveRoleID string,
+	notifyRoleID string,
 	channelCategoryID string,
 	channelCascadeDelete bool,
 ) *ServerConfiguration {
@@ -66,6 +75,7 @@ func (db *ReactRolesDatabase) ServerConfigurationCreate(
 		ChannelCreation:      channelCreation,
 		ChannelCreateRoleID:  channelCreateRoleID,
 		ChannelRemoveRoleID:  channelRemoveRoleID,
+		NotifyRoleID:         notifyRoleID,
 		ChannelCategoryID:    channelCategoryID,
 		ChannelCascadeDelete: channelCascadeDelete,
 	}
@@ -83,6 +93,7 @@ func (db *ReactRolesDatabase) ServerConfigurationUpdate(guildId string,
 	channelCreation bool,
 	channelCreateRoleID string,
 	channelRemoveRoleID string,
+	notifyRoleID string,
 	channelCategoryID string,
 	channelCascadeDelete bool,
 ) *ServerConfiguration {
@@ -95,6 +106,7 @@ func (db *ReactRolesDatabase) ServerConfigurationUpdate(guildId string,
 		ChannelCreation:      channelCreation,
 		ChannelCreateRoleID:  channelCreateRoleID,
 		ChannelRemoveRoleID:  channelRemoveRoleID,
+		NotifyRoleID:         notifyRoleID,
 		ChannelCategoryID:    channelCategoryID,
 		ChannelCascadeDelete: channelCascadeDelete,
 	})
@@ -140,6 +152,7 @@ func (sc *ServerConfiguration) Clone() *ServerConfiguration {
 		ChannelCreation:      sc.ChannelCreation,
 		ChannelCreateRoleID:  sc.ChannelCreateRoleID,
 		ChannelRemoveRoleID:  sc.ChannelRemoveRoleID,
+		NotifyRoleID:         sc.NotifyRoleID,
 		ChannelCategoryID:    sc.ChannelCategoryID,
 		ChannelCascadeDelete: sc.ChannelCascadeDelete,
 	}

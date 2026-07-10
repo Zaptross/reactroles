@@ -6,12 +6,36 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/samber/lo"
 	"github.com/zaptross/reactroles/internal/pgdb"
+	"github.com/zaptross/reactroles/internal/utils"
 )
 
 func (client *DiscordGoClient) GetOnReactionAddHandler() func(*discordgo.Session, *discordgo.MessageReactionAdd) {
 	return func(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
-		selectors := lookupMessagesForSelectors(client, client.db.SelectorGetAll(m.GuildID))
-		if m.UserID == s.State.User.ID || !isReactingToSelector(selectors, m.MessageID) || !client.db.RoleIsEmojiTaken(m.Emoji.Name, m.GuildID) {
+		// ignore the bot's reactions
+		if m.UserID == s.State.User.ID {
+			return
+		}
+
+		selectors := client.db.SelectorGetAll(m.GuildID)
+		selector, reactingToSelector := isReactingToSelector(selectors, m.MessageID)
+		if !reactingToSelector {
+			return
+		}
+
+		// if bell to the preamble selector, add the notify role to the user
+		if selector.RoleID == "" && m.Emoji.Name == utils.EMOJI_BELL {
+			config := client.db.ServerConfigurationGet(m.GuildID)
+			roleErr := s.GuildMemberRoleAdd(m.GuildID, m.UserID, config.NotifyRoleID)
+
+			if roleErr != nil {
+				log.Println(roleErr.Error())
+			}
+
+			return
+		}
+
+		// If the emoji is not used for a role, ignore it
+		if !client.db.RoleIsEmojiTaken(m.Emoji.Name, m.GuildID) {
 			return
 		}
 
@@ -25,8 +49,30 @@ func (client *DiscordGoClient) GetOnReactionAddHandler() func(*discordgo.Session
 
 func (client *DiscordGoClient) GetOnReactionRemoveHandler() func(*discordgo.Session, *discordgo.MessageReactionRemove) {
 	return func(s *discordgo.Session, m *discordgo.MessageReactionRemove) {
-		selectors := lookupMessagesForSelectors(client, client.db.SelectorGetAll(m.GuildID))
-		if m.UserID == s.State.User.ID || !isReactingToSelector(selectors, m.MessageID) || !client.db.RoleIsEmojiTaken(m.Emoji.Name, m.GuildID) {
+		// ignore the bot's reactions
+		if m.UserID == s.State.User.ID {
+			return
+		}
+
+		selectors := client.db.SelectorGetAll(m.GuildID)
+		selector, reactingToSelector := isReactingToSelector(selectors, m.MessageID)
+		if !reactingToSelector {
+			return
+		}
+
+		// if bell to the preamble selector, remove the notify role from the user
+		if selector.RoleID == "" && m.Emoji.Name == utils.EMOJI_BELL {
+			config := client.db.ServerConfigurationGet(m.GuildID)
+			roleErr := s.GuildMemberRoleRemove(m.GuildID, m.UserID, config.NotifyRoleID)
+
+			if roleErr != nil {
+				log.Println(roleErr.Error())
+			}
+			return
+		}
+
+		// If the emoji is not used for a role, ignore it
+		if !client.db.RoleIsEmojiTaken(m.Emoji.Name, m.GuildID) {
 			return
 		}
 
@@ -38,14 +84,14 @@ func (client *DiscordGoClient) GetOnReactionRemoveHandler() func(*discordgo.Sess
 	}
 }
 
-func isReactingToSelector(selectors []*discordgo.Message, messageID string) bool {
+func isReactingToSelector(selectors []pgdb.Selector, messageID string) (*pgdb.Selector, bool) {
 	for _, selector := range selectors {
 		if selector.ID == messageID {
-			return true
+			return &selector, true
 		}
 	}
 
-	return false
+	return nil, false
 }
 
 func lookupMessagesForSelectors(client *DiscordGoClient, selectors []pgdb.Selector) []*discordgo.Message {

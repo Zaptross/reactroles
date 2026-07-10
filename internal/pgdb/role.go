@@ -65,6 +65,12 @@ func (db *ReactRolesDatabase) RoleGetAll(guildId string) []Role {
 	return roles
 }
 
+func (db *ReactRolesDatabase) RolesGetAllOrderByAge(guildId string) []Role {
+	var roles []Role
+	db.DB.Where("guild_id = ?", guildId).Order("created_at ASC").Find(&roles)
+	return roles
+}
+
 func (db *ReactRolesDatabase) RoleIsEmojiTaken(emoji string, guildId string) bool {
 	var role Role
 	db.DB.Where("emoji = ? AND guild_id = ?", emoji, guildId).First(&role)

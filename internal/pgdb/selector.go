@@ -13,13 +13,15 @@ type Selector struct {
 	ID        string    `gorm:"primarykey"`
 	ChannelID string
 	GuildID   string
+	RoleID    string
 }
 
-func (db *ReactRolesDatabase) SelectorCreate(message *discordgo.Message, guildId string) *Selector {
+func (db *ReactRolesDatabase) SelectorCreate(message *discordgo.Message, guildID, roleID string) *Selector {
 	selector := &Selector{
 		ID:        message.ID,
 		ChannelID: message.ChannelID,
-		GuildID:   guildId,
+		GuildID:   guildID,
+		RoleID:    roleID,
 	}
 
 	db.DB.Create(selector)
@@ -27,8 +29,8 @@ func (db *ReactRolesDatabase) SelectorCreate(message *discordgo.Message, guildId
 	return selector
 }
 
-func (db *ReactRolesDatabase) SelectorDelete(message *discordgo.Message, guildId string) {
-	db.DB.Delete(&Selector{}, "id = ? AND guild_id = ?", message.ID, guildId)
+func (db *ReactRolesDatabase) SelectorDelete(guildID, selectorID string) {
+	db.DB.Delete(&Selector{}, "id = ? AND guild_id = ?", selectorID, guildID)
 }
 
 func (db *ReactRolesDatabase) SelectorGetAll(guildId string) []Selector {
