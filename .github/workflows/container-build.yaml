@@ -37,16 +37,6 @@ on:
         required: false
         type: string
         default: "docker.io"
-      registry_username:
-        description: "Registry username (if needed)"
-        required: false
-        type: string
-        default: ""
-      registry_token:
-        description: "Registry token (if needed)"
-        required: false
-        type: string
-        default: ""
       tags:
         description: "Newline-separated tags to apply (without registry prefix)"
         required: true
@@ -56,6 +46,13 @@ on:
         required: false
         type: string
         default: ""
+    secrets:
+      registry_username:
+        description: "Registry username (if needed)"
+        required: false
+      registry_token:
+        description: "Registry token (if needed)"
+        required: false
 
 jobs:
   build:
@@ -79,8 +76,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry_host }}
-          username: ${{ inputs.registry_username }}
-          password: ${{ inputs.registry_token }}
+          username: ${{ secrets.registry_username }}
+          password: ${{ secrets.registry_token }}
 
       - name: Docker meta
         id: meta
@@ -136,8 +133,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry_host }}
-          username: ${{ inputs.registry_username }}
-          password: ${{ inputs.registry_token }}
+          username: ${{ secrets.registry_username }}
+          password: ${{ secrets.registry_token }}
 
       - name: Build tag args
         id: tags
