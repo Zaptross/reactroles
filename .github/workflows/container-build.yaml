@@ -57,6 +57,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    secrets: inherit
     strategy:
       fail-fast: false
       matrix:
@@ -117,6 +118,7 @@ jobs:
     needs: build
     environment: ${{ inputs.push_environment }}
     runs-on: ubuntu-latest
+    secrets: inherit
 
     steps:
       - name: Download digests
