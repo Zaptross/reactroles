@@ -35,8 +35,8 @@ To configure the bot, you will need:
 
 #### Example
 
-- `/role configure <role channel> <add role> <remove role> <update role> <create channel> <create channel role> <remove channel role> <channel category> <cascadeDelete>`
-- `/role configure #roles @role-add @role-remove @role-update true  @role-channel-create @role-channel-remove role-channels true`
+- `/role configure <role channel> <add role> <remove role> <update role> <create channel> <create channel role> <remove channel role> <notify role> <channel category> <cascadeDelete>`
+- `/role configure #roles @role-add @role-remove @role-update true  @role-channel-create @role-channel-remove @role-notify role-channels true`
 
 ### Add Command
 
