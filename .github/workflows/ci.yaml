@@ -68,6 +68,7 @@ jobs:
       - vet
       - test
       - prepare
+    environment: ${{ github.ref == 'refs/heads/main' && 'Image Build' || '' }}
     uses: ./.github/workflows/container-build.yaml
     secrets:
       registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
